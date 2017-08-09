@@ -19,14 +19,6 @@ void Tile::update()
 }
 
 
-
-
-
-
-
-
-
-
 Tile::Tile(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs, const TileType tiletype)
 {
 	this->tiletype = tiletype;
