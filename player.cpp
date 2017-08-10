@@ -18,6 +18,10 @@ void Player::update()
 	// not sure if this is ever necessary?
 }
 
+Player::Player()
+{
+}
+
 Player::Player(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs)
 {
 	this->playerVersion = 0;

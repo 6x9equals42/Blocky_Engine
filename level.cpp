@@ -13,6 +13,7 @@ void Level::load(const std::string& filename, unsigned int width, unsigned int h
 	loadTextures(filename);
 	loadTiles(filename);
 	loadEntities(filename);
+	loadPlayer();
 
 	std::ifstream inputFile;
 	inputFile.open(filename + ".level", std::ios::in | std::ios::binary);
@@ -21,6 +22,9 @@ void Level::load(const std::string& filename, unsigned int width, unsigned int h
 	this->height = height;
 
 	int numEntities;
+
+	inputFile.read((char*)&startTile, sizeof(int));
+	inputFile.read((char*)&exitTile, sizeof(int));
 
 	inputFile.read((char*)&numEntities, sizeof(int));
 	for (int index = 0; index < numEntities; ++index)
@@ -123,12 +127,21 @@ void Level::loadEntities(const std::string& filename)
 			EntityType::ROCK);
 }
 
+void Level::loadPlayer()
+{
+	player = Player(textures.getTexture("playersheet"),
+	{ SpriteInfo(sf::Vector2i(0, 0)) });
+}
+
 void Level::save(const std::string& filename)
 {
 	std::ofstream outputFile;
 	outputFile.open(filename + ".level", std::ios::out | std::ios::binary);
 
 	int numEntities = this->entities.size();
+
+	outputFile.write((char*)&startTile, sizeof(int));
+	outputFile.write((char*)&exitTile, sizeof(int));
 
 	outputFile.write((char*)&numEntities, sizeof(int));
 
@@ -184,6 +197,17 @@ void Level::draw(sf::RenderWindow& window, float dt)
 
 		entity.draw(window, dt);
 	}
+}
+
+void Level::drawPlayer(sf::RenderWindow& window, float dt)
+{
+	// add extra stuff for a moving animation eventually
+	sf::Vector2f pos;
+	pos.x = (playerPos % this->width) * 64;
+	pos.y = int(playerPos / this->width) * 64;
+	player.sprite.setPosition(pos);
+	player.draw(window, dt);
+
 }
 
 int Level::selectTileByPos(sf::Vector2f pos)
@@ -258,4 +282,9 @@ Level::Level(const std::string& filename, unsigned int width, unsigned int heigh
 {
 	load(filename, width, height);
 	selectedTile = -1;
+	startTile = 58;
+	exitTile = 63;
+
+	// temp
+	playerPos = -1;
 }

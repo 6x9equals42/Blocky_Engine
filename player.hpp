@@ -16,7 +16,9 @@ public:
 
 	void draw(sf::RenderWindow& window, float dt);
 
-	// do I need a default constructor?
+	// do I need a default constructor? yes.
+	Player();
+
 	Player(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs);
 
 };
