@@ -139,7 +139,7 @@ void StateMenu::updateMenu()
 
 void StateMenu::menuSelect(Game* game)
 {
-	switch (menu)
+	switch (this->menu)
 	{
 	case 1:
 	{

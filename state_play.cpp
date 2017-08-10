@@ -46,6 +46,14 @@ void StatePlay::handleInput(Game* game)
 			{
 				game->changeState(new StateEdit(level));
 			}
+			if (event.key.code == sf::Keyboard::Up)
+				level.input(Direction::UP);
+			if (event.key.code == sf::Keyboard::Down)
+				level.input(Direction::DOWN);
+			if (event.key.code == sf::Keyboard::Left)
+				level.input(Direction::LEFT);
+			if (event.key.code == sf::Keyboard::Right)
+				level.input(Direction::RIGHT);
 			break;
 		}
 		default: break;
@@ -61,6 +69,7 @@ void StatePlay::init(Game* game)
 	this->worldView.setCenter(pos);
 
 	level.selectTileByPos(sf::Vector2f(-1, -1));
+	level.reset();
 }
 
 StatePlay::StatePlay()

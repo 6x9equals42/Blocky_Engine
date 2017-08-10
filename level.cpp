@@ -132,7 +132,6 @@ void Level::loadEntities(const std::string& filename)
 
 void Level::loadPlayer()
 {
-	std::cout << "loading player";
 	player = Player(textures.getTexture("playersheet"),
 	{ SpriteInfo(sf::Vector2i(0, 0)) });
 	playerPos = startTile;
@@ -166,6 +165,11 @@ void Level::save(const std::string& filename)
 	outputFile.close();
 
 	return;
+}
+
+void Level::reset()
+{
+	this->playerPos = this->startTile;
 }
 
 void Level::draw(sf::RenderWindow& window, float dt)
@@ -281,6 +285,56 @@ void Level::createBlankLevel()
 	}
 	selectedTile = -1;
 }
+
+// input handling functions
+int Level::nextTile(int position, Direction direction)
+{
+	switch (direction)
+	{
+	case Direction::UP:
+	{
+		if (position < this->width)
+			return -1;
+		return position - this->width;
+	}
+	case Direction::DOWN:
+	{
+		if (position >= this->width * (this->height - 1))
+			return -1;
+		return position + this->width;
+	}
+	case Direction::LEFT:
+	{
+		if (position % this->width == 0)
+			return -1;
+		return position - 1;
+	}
+	case Direction::RIGHT:
+	{
+		if (position % this->width == -1 % this->width)
+			return -1;
+		return position + 1;
+	}
+	default:
+		return -1;
+	}
+}
+
+void Level::playerMove(Direction direction)
+{
+	playerPos = nextTile(playerPos, direction);
+}
+
+void Level::input(Direction direction)
+{
+	if (nextTile(playerPos, direction) != -1)
+	{
+		playerMove(direction);
+	}
+}
+
+
+
 
 Level::Level()
 {

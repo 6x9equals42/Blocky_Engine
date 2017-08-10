@@ -10,6 +10,8 @@
 #include "entity.hpp"
 #include "player.hpp"
 
+enum class Direction { UP, DOWN, LEFT, RIGHT };
+
 class Level
 {
 private:
@@ -18,6 +20,15 @@ private:
 	int playerPos;
 	int startTile;
 	int exitTile;
+
+	// internal input logic functions.
+	bool isEntity(int position);
+	bool isPushableEntity(int position, Direction direction);
+	bool isWalkable(int position, Direction direction);
+	bool canPush(int position, Direction direction);
+	int nextTile(int position, Direction direction);
+	void playerMove(Direction direction);
+
 public:
 	unsigned int width;
 	unsigned int height;
@@ -46,13 +57,14 @@ public:
 	void loadEntities(const std::string& filename);
 	void loadPlayer();
 	void load(const std::string& filename, unsigned int width, unsigned int height);
+	void reset(); // this will need to change to actually reload the level instead of just resetting player poss
 
 	void save(const std::string& filename);
 	// this function only exists to easily generate blank things, will be removed.
 	// Edit it's contents to create levels of different sizes.
 	void createBlankLevel();
 
-	// editing functions
+	// editing functions -> I could move these to a different class, might make organization better.
 	void changeTile(TileType tiletype);
 	int selectTileByPos(sf::Vector2f pos);
 	void deleteEntity();
@@ -60,6 +72,9 @@ public:
 	void cycleTileVersion();
 	void cycleEntityVersion();
 
+	// input logic functions. These could also maybe be an individual class.
+	void input(Direction direction);
+	
 
 
 	Level();
