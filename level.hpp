@@ -49,6 +49,8 @@ public:
 	int selectTileByPos(sf::Vector2f pos);
 	void deleteEntity();
 	void setEntity(EntityType entitytype);
+	void cycleTileVersion();
+	void cycleEntityVersion();
 
 
 

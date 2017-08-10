@@ -44,6 +44,8 @@ private:
 	sf::IntRect frameSize;
 
 public:
+	int getNumVersions();
+
 	void setFrameSize(const sf::IntRect& frameSize);
 
 	void initVersion(SpriteInfo& ver);

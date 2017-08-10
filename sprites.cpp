@@ -2,6 +2,11 @@
 
 #include "sprites.hpp"
 
+int SpriteHelper::getNumVersions()
+{
+	return versions.size();
+}
+
 void SpriteHelper::setFrameSize(const sf::IntRect& frameSize)
 {
 	this->frameSize = frameSize;

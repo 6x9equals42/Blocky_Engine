@@ -80,11 +80,31 @@ void StateEdit::handleInput(Game* game)
 			}
 			if (event.key.code == sf::Keyboard::H)
 			{
+				this->level.setEntity(EntityType::BUCKET);
+			}
+			if (event.key.code == sf::Keyboard::J)
+			{
+				this->level.setEntity(EntityType::TORCH);
+			}
+			if (event.key.code == sf::Keyboard::K)
+			{
 				this->level.setEntity(EntityType::ROCK);
+			}
+			if (event.key.code == sf::Keyboard::L)
+			{
+				this->level.setEntity(EntityType::BOAT);
 			}
 			if (event.key.code == sf::Keyboard::Delete)
 			{
 				this->level.deleteEntity();
+			}
+			if (event.key.code == sf::Keyboard::C)
+			{
+				this->level.cycleTileVersion();
+			}
+			if (event.key.code == sf::Keyboard::V)
+			{
+				this->level.cycleEntityVersion();
 			}
 			//if (event.key.code == sf::Keyboard::Return)
 			//	menuSelect();

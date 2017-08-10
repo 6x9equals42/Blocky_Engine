@@ -92,7 +92,7 @@ void Level::loadTiles(const std::string& filename)
 
 	this->tileBank[TileType::COAL] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(128, 64)) }, 
+		{ SpriteInfo(sf::Vector2i(128, 64)), SpriteInfo(sf::Vector2i(64, 192)) }, 
 			TileType::COAL);
 
 	this->tileBank[TileType::SAPLING] = 
@@ -107,19 +107,19 @@ void Level::loadEntities(const std::string& filename)
 {
 	this->entityBank[EntityType::BOAT] =
 		Entity(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(64,128)) },
+		{ SpriteInfo(sf::Vector2i(64, 128)) },
 			EntityType::BOAT);
 	this->entityBank[EntityType::BUCKET] =
 		Entity(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(128,128)) },
+		{ SpriteInfo(sf::Vector2i(128, 128)), SpriteInfo(sf::Vector2i(128, 192)) },
 			EntityType::BUCKET);
 	this->entityBank[EntityType::TORCH] =
 		Entity(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(192,128)) },
+		{ SpriteInfo(sf::Vector2i(192, 128)), SpriteInfo(sf::Vector2i(192, 192)) },
 			EntityType::TORCH);
 	this->entityBank[EntityType::ROCK] =
 		Entity(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(0,192)) },
+		{ SpriteInfo(sf::Vector2i(0, 192)) },
 			EntityType::ROCK);
 }
 
@@ -208,6 +208,13 @@ void Level::changeTile(TileType tiletype)
 	}
 }
 
+void Level::cycleTileVersion()
+{
+	int numVersions = this->tiles[selectedTile].sprthlpr.getNumVersions();
+
+	this->tiles[selectedTile].tileVersion = (this->tiles[selectedTile].tileVersion + 1) % numVersions;
+}
+
 void Level::setEntity(EntityType entitytype)
 {
 	this->entities.push_back(entityBank.at(entitytype));
@@ -216,9 +223,17 @@ void Level::setEntity(EntityType entitytype)
 
 void Level::deleteEntity()
 {
+	// this is an idiom I should memorize.
 	entities.erase(std::remove_if(entities.begin(), entities.end(), 
-		[&](const Entity entity)->bool{ return entity.pos == selectedTile; }), 
+		[&](const Entity entity)->bool{ return entity.pos == selectedTile; }),  // would you look at that, a lambda!
 		entities.end());
+}
+
+void Level::cycleEntityVersion()
+{
+	int numVersions = this->entities.back().sprthlpr.getNumVersions();
+	this->entities.back().entityVersion = (this->entities.back().entityVersion + 1) % numVersions;
+
 }
 
 void Level::createBlankLevel()
