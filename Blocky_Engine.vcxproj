@@ -149,6 +149,7 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="level.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="player.cpp" />
     <ClCompile Include="sprites.cpp" />
     <ClCompile Include="state_edit.cpp" />
     <ClCompile Include="state_menu.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="entity.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="level.hpp" />
+    <ClInclude Include="player.hpp" />
     <ClInclude Include="sprites.hpp" />
     <ClInclude Include="state.hpp" />
     <ClInclude Include="state_edit.hpp" />
