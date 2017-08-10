@@ -12,6 +12,7 @@ public:
 	SpriteHelper sprthlpr;
 	sf::Sprite sprite;
 	EntityType entityType;
+	int pos;
 
 	int entityVersion;
 

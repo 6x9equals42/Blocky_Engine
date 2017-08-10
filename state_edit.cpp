@@ -78,6 +78,14 @@ void StateEdit::handleInput(Game* game)
 			{
 				this->level.changeTile(TileType::COAL);
 			}
+			if (event.key.code == sf::Keyboard::H)
+			{
+				this->level.setEntity(EntityType::ROCK);
+			}
+			if (event.key.code == sf::Keyboard::Delete)
+			{
+				this->level.deleteEntity();
+			}
 			//if (event.key.code == sf::Keyboard::Return)
 			//	menuSelect();
 			break;
@@ -109,6 +117,6 @@ StateEdit::StateEdit()
 	
 	//level = Level();
 	//level.createBlankLevel(); // for creating new levels..
-
+	
 	level = Level("test", 8, 8);
 }

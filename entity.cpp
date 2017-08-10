@@ -24,6 +24,9 @@ Entity::Entity(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs, con
 	this->entityVersion = 0;
 	this->entityType = entityType;
 
+	this->pos = -1;
+
+
 	this->sprite.setTexture(texture);
 	this->sprthlpr.setFrameSize(sf::IntRect(0, 0, 64, 64));
 
