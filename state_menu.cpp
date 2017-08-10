@@ -3,6 +3,7 @@
 #include "state_menu.hpp"
 #include "state.hpp"
 #include "state_edit.hpp"
+#include "state_play.hpp"
 
 //#include <iostream>
 
@@ -143,6 +144,7 @@ void StateMenu::menuSelect(Game* game)
 	case 1:
 	{
 		// Play
+		game->pushState(new StatePlay());
 		break;
 	}
 	case 2:
@@ -163,7 +165,12 @@ void StateMenu::menuSelect(Game* game)
 }
 
 void StateMenu::init(Game* game)
-{}
+{
+	sf::Vector2f pos = sf::Vector2f(game->window.getSize());
+	this->view.setSize(pos);
+	pos *= 0.5f;
+	this->view.setCenter(pos);
+}
 
 StateMenu::StateMenu()
 {

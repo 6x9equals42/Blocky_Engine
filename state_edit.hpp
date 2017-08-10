@@ -22,4 +22,5 @@ public:
 	virtual void init(Game* game);
 
 	StateEdit();
+	StateEdit(Level level);
 };

@@ -2,6 +2,7 @@
 
 #include "state_edit.hpp"
 #include "state.hpp"
+#include "state_play.hpp"
 
 #include <iostream>
 
@@ -106,6 +107,10 @@ void StateEdit::handleInput(Game* game)
 			{
 				this->level.cycleEntityVersion();
 			}
+			if (event.key.code == sf::Keyboard::Return)
+			{
+				game->changeState(new StatePlay(level));
+			}
 			//if (event.key.code == sf::Keyboard::Return)
 			//	menuSelect();
 			break;
@@ -140,3 +145,9 @@ StateEdit::StateEdit()
 	
 	level = Level("test", 8, 8);
 }
+
+StateEdit::StateEdit(Level level)
+{
+	this->level = level;
+}
+

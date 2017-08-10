@@ -8,6 +8,8 @@
 #include "level.hpp"
 #include "tile.hpp"
 
+#include <iostream>
+
 void Level::load(const std::string& filename, unsigned int width, unsigned int height)
 {
 	loadTextures(filename);
@@ -60,6 +62,7 @@ void Level::loadTextures(const std::string& filename)
 {
 	// make this also load from file eventually (which textures to load)
 	textures.loadTexture("spritesheet", "media/spritesheet.png");
+	textures.loadTexture("playersheet", "media/playersheet.png");
 }
 
 void Level::loadTiles(const std::string& filename)
@@ -129,8 +132,10 @@ void Level::loadEntities(const std::string& filename)
 
 void Level::loadPlayer()
 {
+	std::cout << "loading player";
 	player = Player(textures.getTexture("playersheet"),
 	{ SpriteInfo(sf::Vector2i(0, 0)) });
+	playerPos = startTile;
 }
 
 void Level::save(const std::string& filename)
@@ -202,11 +207,15 @@ void Level::draw(sf::RenderWindow& window, float dt)
 void Level::drawPlayer(sf::RenderWindow& window, float dt)
 {
 	// add extra stuff for a moving animation eventually
-	sf::Vector2f pos;
-	pos.x = (playerPos % this->width) * 64;
-	pos.y = int(playerPos / this->width) * 64;
-	player.sprite.setPosition(pos);
-	player.draw(window, dt);
+	if (playerPos > -1)
+	{
+		sf::Vector2f pos;
+		pos.x = (playerPos % this->width) * 64;
+		pos.y = int(playerPos / this->width) * 64;
+		player.sprite.setPosition(pos);
+		player.draw(window, dt);
+	}
+
 
 }
 
@@ -280,11 +289,9 @@ Level::Level()
 
 Level::Level(const std::string& filename, unsigned int width, unsigned int height)
 {
-	load(filename, width, height);
+	
 	selectedTile = -1;
 	startTile = 58;
 	exitTile = 63;
-
-	// temp
-	playerPos = -1;
+	load(filename, width, height);
 }

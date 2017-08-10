@@ -54,7 +54,7 @@ void Game::popState()
 
 Game::Game()
 {
-	this->window.create(sf::VideoMode(800, 600), "title");
+	this->window.create(sf::VideoMode(1024, 768), "Blocky_Engine");
 	this->window.setFramerateLimit(60);
 }
 
