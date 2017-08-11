@@ -86,7 +86,12 @@ void Level::loadTiles(const std::string& filename)
 {
 	this->tileBank[TileType::BRIDGE] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(128, 0)) }, 
+		{ SpriteInfo(sf::Vector2i(128, 0)), 
+			SpriteInfo(sf::Vector2i(384, 64)), 
+			SpriteInfo(sf::Vector2i(448, 0)),
+			SpriteInfo(sf::Vector2i(448, 64)),
+			SpriteInfo(sf::Vector2i(384, 192)),
+			SpriteInfo(sf::Vector2i(448, 128)) },
 			TileType::BRIDGE);
 
 	this->tileBank[TileType::FLAT] = 
@@ -106,8 +111,21 @@ void Level::loadTiles(const std::string& filename)
 
 	this->tileBank[TileType::WATERWAY] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(0, 64)) }, 
-			TileType::WATERWAY); // TODO Water Direction versions + empty + animations
+		{ SpriteInfo(sf::Vector2i(0, 64)),
+			SpriteInfo(sf::Vector2i(320, 64)),
+			SpriteInfo(sf::Vector2i(320, 0)),
+			SpriteInfo(sf::Vector2i(384, 0)),
+			SpriteInfo(sf::Vector2i(384, 128)) },
+			TileType::WATERWAY); // TODO  + animations
+
+	this->tileBank[TileType::WATERSOURCE] =
+		Tile(textures.getTexture("spritesheet"),
+		{ SpriteInfo(sf::Vector2i(0, 64)),
+			SpriteInfo(sf::Vector2i(320, 64)),
+			SpriteInfo(sf::Vector2i(320, 0)),
+			SpriteInfo(sf::Vector2i(384, 0)),
+			SpriteInfo(sf::Vector2i(384, 128)) },
+			TileType::WATERSOURCE); // The only reason this type exists is to enable the logic for water flow.
 
 	/*this->tileBank[TileType::DRAIN] = 
 		Tile(textures.getTexture("spritesheet"), 
@@ -116,12 +134,17 @@ void Level::loadTiles(const std::string& filename)
 
 	this->tileBank[TileType::COAL] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(128, 64)), SpriteInfo(sf::Vector2i(64, 192)) }, 
+		{ SpriteInfo(sf::Vector2i(128, 64)), 
+			SpriteInfo(sf::Vector2i(64, 192)) }, 
 			TileType::COAL);
 
 	this->tileBank[TileType::SAPLING] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(192, 64)), SpriteInfo(sf::Vector2i(0, 128)) }, 
+		{ SpriteInfo(sf::Vector2i(192, 64)), 
+			SpriteInfo(sf::Vector2i(256, 0)),
+			SpriteInfo(sf::Vector2i(64, 64)),
+			SpriteInfo(sf::Vector2i(0, 128)),
+			SpriteInfo(sf::Vector2i(256, 64)) },
 			TileType::SAPLING);
 
 	//this->tileBank[TileType::TREE] = Tile(textures.getTexture("spritesheet"), { SpriteInfo(sf::Vector2i(0, 128)) }, TileType::TREE);
@@ -131,7 +154,10 @@ void Level::loadEntities(const std::string& filename)
 {
 	this->entityBank[EntityType::BOAT] =
 		Entity(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(64, 128)) },
+		{ SpriteInfo(sf::Vector2i(64, 128)),
+			SpriteInfo(sf::Vector2i(320, 128)),
+			SpriteInfo(sf::Vector2i(320, 192)),
+			SpriteInfo(sf::Vector2i(256, 192)) },
 			EntityType::BOAT);
 	this->entityBank[EntityType::BUCKET] =
 		Entity(textures.getTexture("spritesheet"),
@@ -143,7 +169,8 @@ void Level::loadEntities(const std::string& filename)
 			EntityType::TORCH);
 	this->entityBank[EntityType::ROCK] =
 		Entity(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(0, 192)) },
+		{ SpriteInfo(sf::Vector2i(0, 192)),
+			SpriteInfo(sf::Vector2i(256, 128)) },
 			EntityType::ROCK);
 }
 
@@ -157,14 +184,20 @@ void Level::loadPlayer()
 void Level::settleEntities()
 {
 	std::vector<Entity>::iterator it = entities.begin();
-	std::cout << "settling entities \n";
-	std::cout << "before, we have " << subEntities.size() << " subentities \n";
+	//std::cout << "settling entities \n";
+	//std::cout << "before, we have " << subEntities.size() << " subentities \n";
 
 	while (it != entities.end())
 	{
 		if (tiles[it->pos].tiletype == TileType::WATERWAY && !isWalkable(it->pos, Direction::NONE))
 		{
-			std::cout << "found one to settle at " << it->pos << "\n";
+			//std::cout << "found one to settle at " << it->pos << "\n";
+			if (it->entityType == EntityType::ROCK)
+				it->entityVersion = 1;
+			if (it->entityType == EntityType::BOAT && it->entityVersion == 0)
+				it->entityVersion = 2;
+			if (it->entityType == EntityType::BOAT && it->entityVersion == 1)
+				it->entityVersion = 3;
 			subEntities.push_back(*it);
 			it = entities.erase(it);
 		}
@@ -414,6 +447,7 @@ void Level::input(Direction direction)
 					//std::cout << "I can push it \n";
 					playerFace(direction);
 					pushEntities(playerPos, direction);
+					settleEntities();
 					playerMove(direction);
 				}
 				else
@@ -439,6 +473,24 @@ void Level::input(Direction direction)
 	else
 	{
 		// TODO for while on a boat. I'll do this logic later.
+		/////////////// 2nd batch of ideas
+		// for side of boat
+			// check if it's walkable only to the sides of the boat
+				// if it's walkable, check if there's an entity next
+					// yes, then check for pushable entity
+						// if yes, push function(pushes all recursively), face
+						// if not, activate recursively, face
+					// no, then walk, face
+				// if not, face nothing
+		// for end of boat
+			// check if there is watertile (not with a subbed rock) ** need this function isRowable
+				// if yes check if there is a boat ** isBoat
+					// yes, then check if boat is pushable ** isBoatPushable
+						// if yes, push (pushes all boats along + the entities on them + player), face ** pushBoats
+						// if not, face. cannot activate.
+					// no, move the boat, move the player ** moveBoat, movePlayer **
+				// if not, face
+
 	}
 
 }
@@ -519,7 +571,7 @@ bool Level::isPushableEntity(int position, Direction direction)
 	if (tiletype == TileType::INACCESSIBLE ||
 		tiletype == TileType::SAPLING ||
 		(tiletype == TileType::COAL && tileVersion == 1) ||
-		(isEntity(position) && tiletype == TileType::WATERWAY && tileVersion == 0 && // TODO update the waterversion when i add more types
+		(isEntity(position) && tiletype == TileType::WATERWAY && tileVersion < 4 &&
 			(entityType == EntityType::BUCKET || entityType == EntityType::TORCH)) &&
 			!this->isSubEntity(newPosition)) 
 	{
@@ -553,18 +605,35 @@ void Level::pushEntities(int position, Direction direction)
 			break;
 		}
 	}
-	// TODO Check that if a torch lands on a coal square, destroy the torch and light the coal.
-	// TODO if entity ends in water, either set to subentity or delete. boats can go in empty waterways, but cannot move!
-
+	bool remove = false;
 	// move the entity on the current tile.
 	for (auto &entity : entities)
 	{
 		if (entity.pos == position)
 		{
 			entity.pos = newPosition;
+			if (tiles[newPosition].tiletype == TileType::COAL && entity.entityType == EntityType::TORCH && entity.entityVersion == 0)
+			{
+				tiles[newPosition].tileVersion = 1;
+				remove = true;
+			}
+			if (entity.entityType == EntityType::BOAT)
+			{
+				if (direction == Direction::LEFT || direction == Direction::RIGHT)
+					entity.entityVersion = 0;
+				else
+					entity.entityVersion = 1;
+			}
 			break;
 		}
 	}
+	if (remove)
+	{
+		entities.erase(std::remove_if(entities.begin(), entities.end(),
+			[&](const Entity entity)->bool { return entity.pos == newPosition; }),
+			entities.end());
+	}
+
 }
 
 void Level::activateEntities(int position, Direction direction)
@@ -618,7 +687,7 @@ void Level::activateEntities(int position, Direction direction)
 		else if (currentEnt->entityVersion == 1)
 		{
 			// passing to next bucket
-			if (safeToCheck && (nextEnt->entityType == EntityType::BUCKET && nextEnt->entityVersion == 0)) // TODO make it so only pours 1 ahead at a time. (put activate call before.
+			if (safeToCheck && (nextEnt->entityType == EntityType::BUCKET && nextEnt->entityVersion == 0))
 			{
 				//activate next
 				activateEntities(newPosition, direction);

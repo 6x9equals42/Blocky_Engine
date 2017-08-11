@@ -32,6 +32,8 @@ private:
 	void playerFace(Direction direction);
 	void pushEntities(int position, Direction direction);
 	void activateEntities(int position, Direction direction);
+	// and boat logic
+	bool isRowable(int position, Direction direction);
 
 public:
 	unsigned int width;

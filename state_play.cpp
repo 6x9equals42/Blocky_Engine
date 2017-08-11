@@ -47,13 +47,13 @@ void StatePlay::handleInput(Game* game)
 			{
 				game->changeState(new StateEdit(level));
 			}
-			if (event.key.code == sf::Keyboard::Up)
+			if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W)
 				level.input(Direction::UP);
-			if (event.key.code == sf::Keyboard::Down)
+			if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::D)
 				level.input(Direction::DOWN);
-			if (event.key.code == sf::Keyboard::Left)
+			if (event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::S)
 				level.input(Direction::LEFT);
-			if (event.key.code == sf::Keyboard::Right)
+			if (event.key.code == sf::Keyboard::Right || event.key.code == sf::Keyboard::A)
 				level.input(Direction::RIGHT);
 			break;
 		}
@@ -70,6 +70,7 @@ void StatePlay::init(Game* game)
 	this->worldView.setCenter(pos);
 
 	level.selectTileByPos(sf::Vector2f(-1, -1));
+	level.settleEntities();
 	level.reset();
 }
 
