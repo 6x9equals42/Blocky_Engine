@@ -401,7 +401,7 @@ void Level::input(Direction direction)
 				// if not, activate recursively, face
 			// no, then walk, face
 		// if not, then just face, don't move
-	if (playerOnLand())
+	if (onLand(playerPos))
 	{
 		if (isWalkable(playerPos, direction))
 		{
@@ -443,13 +443,13 @@ void Level::input(Direction direction)
 
 }
 
-bool Level::playerOnLand()
+bool Level::onLand(int position)
 {
-	if (tiles[playerPos].tiletype != TileType::WATERWAY)
+	if (tiles[position].tiletype != TileType::WATERWAY)
 		return true;
 	for (auto entity : subEntities)
 	{
-		if (entity.pos == playerPos && entity.entityType == EntityType::ROCK)
+		if (entity.pos == position && entity.entityType == EntityType::ROCK)
 			return true;
 	}
 	return false;
@@ -676,6 +676,11 @@ void Level::activateEntities(int position, Direction direction)
 
 				// if already a tree, make it burn!!!
 				return;
+			}
+			// dousing it
+			else if (targetTile->tiletype == TileType::WATERWAY && !(isSubEntity(newPosition)))
+			{
+				currentEnt->entityVersion = 1;
 			}
 		}
 		// lighting the current torch

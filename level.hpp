@@ -22,7 +22,7 @@ private:
 
 
 	// internal input logic functions.
-	bool playerOnLand();
+	bool onLand(int position);
 	bool isEntity(int position);
 	bool isSubEntity(int position);
 	bool isPushableEntity(int position, Direction direction);
