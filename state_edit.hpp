@@ -7,7 +7,7 @@ class StateEdit : public State
 {
 private:
 	sf::View worldView;
-	// add a gui view if I ever need one that's different. Dunno if zooming is a thing yet.
+	// TODO add a gui view if I ever need one that's different. Dunno if zooming is a thing yet.
 
 
 	Level level;

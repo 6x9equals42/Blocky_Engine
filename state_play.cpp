@@ -11,7 +11,7 @@ void StatePlay::draw(Game* game, const float dt)
 	game->window.setView(worldView);
 	this->level.draw(game->window, dt);
 	this->level.drawPlayer(game->window, dt);
-	//background again. dunno if this will happen.
+	// TODO background again. dunno if this will happen.
 	// this->game->window.draw(this->game->background);
 
 	return;
@@ -19,6 +19,7 @@ void StatePlay::draw(Game* game, const float dt)
 
 void StatePlay::update(Game* game, const float dt)
 {
+	// TODO tree logic should be called from here.
 	return;
 }
 
@@ -37,7 +38,7 @@ void StatePlay::handleInput(Game* game)
 			game->window.close();
 			break;
 		}
-		// include resizing code here
+		// TODO include resizing code here/ disable
 		case sf::Event::KeyPressed:
 		{
 			if (event.key.code == sf::Keyboard::Escape)

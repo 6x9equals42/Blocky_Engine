@@ -12,7 +12,7 @@ void StateEdit::draw(Game* game, const float dt)
 
 	game->window.setView(worldView);
 	this->level.draw(game->window, dt);
-	//background again. dunno if this will happen.
+	// TODO background again. dunno if this will happen.
 	// this->game->window.draw(this->game->background);
 
 	return;
@@ -38,7 +38,7 @@ void StateEdit::handleInput(Game* game)
 			game->window.close();
 			break;
 		}
-		// include resizing code here
+		//TODO include resizing code here
 		case sf::Event::KeyPressed:
 		{
 			if (event.key.code == sf::Keyboard::Escape)
@@ -59,13 +59,13 @@ void StateEdit::handleInput(Game* game)
 			{
 				this->level.changeTile(TileType::WATERWAY);
 			}
-			if (event.key.code == sf::Keyboard::Num4)
+			/*if (event.key.code == sf::Keyboard::Num4)
 			{
 				this->level.changeTile(TileType::WATERSOURCE);
-			}
+			}*/
 			if (event.key.code == sf::Keyboard::Num5)
 			{
-				this->level.changeTile(TileType::DRAIN);
+				this->level.changeTile(TileType::VOID);
 			}
 			if (event.key.code == sf::Keyboard::Num6)
 			{
@@ -111,8 +111,6 @@ void StateEdit::handleInput(Game* game)
 			{
 				game->changeState(new StatePlay(level));
 			}
-			//if (event.key.code == sf::Keyboard::Return)
-			//	menuSelect();
 			break;
 		}
 		case sf::Event::MouseButtonPressed:

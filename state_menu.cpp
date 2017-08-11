@@ -15,7 +15,7 @@ void StateMenu::draw(Game* game, const float dt)
 	game->window.clear(sf::Color::Black);
 
 
-	// for the background of the title screen once I have a sf::sprite background
+	// TODO for the background of the title screen once I have a sf::sprite background
 	// this->game->window.draw(this->game->background);
 
 	game->window.draw(menuPlay);
@@ -43,7 +43,7 @@ void StateMenu::handleInput(Game* game)
 			game->window.close();
 			break;
 		}
-		// include resizing code here
+		// TODO include resizing code here
 		case sf::Event::KeyPressed:
 		{
 			if (event.key.code == sf::Keyboard::S || event.key.code == sf::Keyboard::Down)

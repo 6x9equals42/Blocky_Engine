@@ -15,19 +15,23 @@ enum class Direction { UP, DOWN, LEFT, RIGHT };
 class Level
 {
 private:
-	// remember to change this to -1 in the play version constructor.
 	int selectedTile;
 	int playerPos;
 	int startTile;
 	int exitTile;
 
+
 	// internal input logic functions.
+	bool playerOnLand();
 	bool isEntity(int position);
+	bool isSubEntity(int position);
 	bool isPushableEntity(int position, Direction direction);
 	bool isWalkable(int position, Direction direction);
-	bool canPush(int position, Direction direction);
 	int nextTile(int position, Direction direction);
 	void playerMove(Direction direction);
+	void playerFace(Direction direction);
+	void pushEntities(int position, Direction direction);
+	void activateEntities(int position, Direction direction);
 
 public:
 	unsigned int width;
@@ -41,6 +45,7 @@ public:
 	std::vector<Tile> tiles;
 	// and also a vector of entities
 	std::vector<Entity> entities;
+	std::vector<Entity> subEntities;            // TODO remember to add this to loading at some point.
 	// and the player;
 	Player player;
 

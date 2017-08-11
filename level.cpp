@@ -8,7 +8,7 @@
 #include "level.hpp"
 #include "tile.hpp"
 
-#include <iostream>
+#include <iostream> // TODO Remove this (and other ios before the end)
 
 void Level::load(const std::string& filename, unsigned int width, unsigned int height)
 {
@@ -60,7 +60,7 @@ void Level::load(const std::string& filename, unsigned int width, unsigned int h
 
 void Level::loadTextures(const std::string& filename)
 {
-	// make this also load from file eventually (which textures to load)
+	// TODO make this also load from file eventually (which textures to load)
 	textures.loadTexture("spritesheet", "media/spritesheet.png");
 	textures.loadTexture("playersheet", "media/playersheet.png");
 }
@@ -82,20 +82,20 @@ void Level::loadTiles(const std::string& filename)
 		{ SpriteInfo(sf::Vector2i(0, 0)) }, 
 			TileType::INACCESSIBLE);
 
-	this->tileBank[TileType::WATERSOURCE] = 
+	this->tileBank[TileType::VOID] = 
 		Tile(textures.getTexture("spritesheet"), 
 		{ SpriteInfo(sf::Vector2i(192, 0)) }, 
-			TileType::WATERSOURCE);
+			TileType::VOID);
 
 	this->tileBank[TileType::WATERWAY] = 
 		Tile(textures.getTexture("spritesheet"), 
 		{ SpriteInfo(sf::Vector2i(0, 64)) }, 
-			TileType::WATERWAY);
+			TileType::WATERWAY); // TODO Water Direction versions + empty + animations
 
-	this->tileBank[TileType::DRAIN] = 
+	/*this->tileBank[TileType::DRAIN] = 
 		Tile(textures.getTexture("spritesheet"), 
 		{ SpriteInfo(sf::Vector2i(64, 64)) }, 
-			TileType::DRAIN);
+			TileType::DRAIN);*/
 
 	this->tileBank[TileType::COAL] = 
 		Tile(textures.getTexture("spritesheet"), 
@@ -210,7 +210,7 @@ void Level::draw(sf::RenderWindow& window, float dt)
 
 void Level::drawPlayer(sf::RenderWindow& window, float dt)
 {
-	// add extra stuff for a moving animation eventually
+	// TODO add extra stuff for a moving animation eventually
 	if (playerPos > -1)
 	{
 		sf::Vector2f pos;
@@ -325,16 +325,301 @@ void Level::playerMove(Direction direction)
 	playerPos = nextTile(playerPos, direction);
 }
 
+void Level::playerFace(Direction directio)
+{
+	// TODO this will be player version change.
+}
+
 void Level::input(Direction direction)
 {
-	if (nextTile(playerPos, direction) != -1)
+	/////////////// My ideas for rn (this is just for on land!!)
+	// check if it's walkable
+		// if it's walkable, check if there's an entity next
+			// yes, then check for pushable entity
+				// if yes, push function(pushes all recursively), face
+				// if not, activate recursively, face
+			// no, then walk, face
+		// if not, then just face, don't move
+	if (playerOnLand())
 	{
-		playerMove(direction);
+		if (isWalkable(playerPos, direction))
+		{
+			if (isEntity(nextTile(playerPos, direction)))
+			{
+				if (isPushableEntity(playerPos, direction))
+				{
+					playerFace(direction);
+					pushEntities(playerPos, direction);
+					playerMove(direction);
+				}
+				else
+				{
+					playerFace(direction);
+					activateEntities(playerPos, direction);
+				}
+			}
+			else
+			{
+				playerMove(direction);
+				playerFace(direction);
+			}
+		}
+		else
+		{
+			playerFace(direction);
+		}
+	}
+	else
+	{
+		// TODO for while on a boat. I'll do this logic later.
+	}
+
+}
+
+bool Level::playerOnLand()
+{
+	if (tiles[playerPos].tiletype != TileType::WATERWAY)
+		return true;
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == playerPos && entity.entityType == EntityType::ROCK)
+			return true;
+	}
+	return false;
+}
+
+bool Level::isSubEntity(int position)
+{
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == position)
+			return true;
+	}
+	return false;
+}
+
+bool Level::isEntity(int position)
+{
+	for (auto entity : entities)
+	{
+		if (entity.pos == position)
+			return true;
+	}
+	return false;
+}
+
+// call from the current player's position
+bool Level::isWalkable(int position, Direction direction)
+{
+	int newPosition = this->nextTile(position, direction);
+	
+	if (newPosition == -1)
+		return false;
+
+	TileType tiletype = this->tiles[newPosition].tiletype;
+	int tileVersion = this->tiles[newPosition].tileVersion;
+
+	if (tiletype == TileType::BRIDGE ||
+		(tiletype == TileType::COAL && tileVersion == 0) ||
+		tiletype == TileType::FLAT ||
+		(tiletype == TileType::WATERWAY && this->isSubEntity(position)))
+	{
+		return true;
+	}
+	return false;
+}
+
+// call from player position initially
+bool Level::isPushableEntity(int position, Direction direction)
+{
+	int newPosition = this->nextTile(position, direction);
+
+	if (newPosition == -1)
+		return false;
+
+	TileType tiletype = this->tiles[newPosition].tiletype;
+	int tileVersion = this->tiles[newPosition].tileVersion;
+
+	if (tiletype == TileType::INACCESSIBLE ||
+		tiletype == TileType::SAPLING ||
+		(tiletype == TileType::COAL && tileVersion == 1))
+	{
+		return false;
+	}
+	
+	for (auto entity : entities)
+	{
+		if (entity.pos == newPosition)
+		{
+			// there is an entity in the next tile!
+			return isPushableEntity(newPosition, direction);
+		}
+			
+	}
+	return true;
+}
+
+void Level::pushEntities(int position, Direction direction)
+{
+	int newPosition = this->nextTile(position, direction);
+
+	// call push on the entity in the next tile.
+	for (auto entity : entities)
+	{
+		if (entity.pos == newPosition)
+		{
+			pushEntities(newPosition, direction);
+			break;
+		}
+	}
+	// TODO Check that if a torch lands on a coal square, destroy the torch and light the coal.
+	// TODO if entity ends in water, either set to subentity or delete. boats can go in empty waterways, but cannot move!
+
+	// move the entity on the current tile.
+	for (auto entity : entities)
+	{
+		if (entity.pos == position)
+		{
+			entity.pos = newPosition;
+			break;
+		}
 	}
 }
 
+void Level::activateEntities(int position, Direction direction)
+{
+	int newPosition = this->nextTile(position, direction);
+	Entity* currentEnt;
+	Entity* nextEnt;
 
+	Tile* targetTile = &tiles[newPosition];
 
+	// get the references of both entities
+	for (auto &entity : entities)
+	{
+		if (entity.pos == position)
+		{
+			currentEnt = &entity;
+		}
+		if (entity.pos == newPosition)
+		{
+			nextEnt = &entity;
+		}
+	}
+
+	// calling activate is interspersed within the conditionals to control chain behavior
+
+	if (currentEnt->entityType == EntityType::BUCKET)
+	{
+		// filling a bucket
+		if (currentEnt->entityVersion == 0)
+		{
+			// from a full bucket
+			// it makes sense that buckets pour in a line instead of scoop.
+			/*if (nextEnt->entityType == EntityType::BUCKET && nextEnt->entityVersion == 1)
+			{
+				// change the bucket versions
+			}*/
+			if (targetTile->tiletype == TileType::WATERWAY && !(isSubEntity(newPosition))) // TODO make sure this checks properly for which waterway types have water
+			{
+				// fill the one bucket
+				currentEnt->entityVersion = 1;
+				// don't need to activate cause its the end
+			}
+			else
+				activateEntities(newPosition, direction);
+		}
+		// emptying a bucket
+		else if (currentEnt->entityVersion == 1)
+		{
+			// passing to next bucket
+			if (nextEnt->entityType == EntityType::BUCKET && nextEnt->entityVersion == 0) // TODO make it so only pours 1 ahead at a time. (put activate call before.
+			{
+				//activate next
+				activateEntities(newPosition, direction);
+				// pour to next bucket
+				currentEnt->entityVersion = 0;
+				nextEnt->entityVersion = 1;
+			}
+			// putting out a torch
+			else if (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0)
+			{
+				// put out torch
+				nextEnt->entityVersion = 1;
+				currentEnt->entityVersion = 0;
+				// then activate
+				activateEntities(newPosition, direction);
+			}
+			// putting out a fire
+			else if (targetTile->tiletype == TileType::COAL && targetTile->tileVersion == 1)
+			{
+				//put out the fire
+				targetTile->tileVersion = 0;
+				currentEnt->entityVersion = 0;
+				// don't need to acctivate 'cause it's the end.
+			}
+			// watering a sapling
+			else if (targetTile->tiletype == TileType::SAPLING && targetTile->tileVersion == 0)  // TODO also make sure to account for different tileversinos here
+			{
+				//water the sapling
+				// TODO add tree versions and change this one.
+				currentEnt->entityVersion = 0;
+				// don't need to acctivate 'cause it's the end.
+			}
+			else
+			{
+				activateEntities(newPosition, direction);
+			}
+		}
+	}
+	else if (currentEnt->entityType == EntityType::TORCH)
+	{
+		// using the current torch
+		if (currentEnt->entityVersion == 0)
+		{
+			if (nextEnt->entityType == EntityType::TORCH)
+			{
+				// activate the next first before making sure the next is on
+				activateEntities(newPosition, direction);
+				nextEnt->entityVersion = 0;
+			}
+			// using it on a sapling
+			else if (targetTile->tiletype == TileType::SAPLING && targetTile->tileVersion == 0)  // TODO ditto as above
+			{
+				// TODO change the version of the sapling tile.
+
+				// if already a tree, make it burn!!!
+			}
+			else
+			{
+				activateEntities(newPosition, direction);
+			}
+		}
+		// lighting the current torch
+		else if (currentEnt->entityVersion == 1)
+		{
+			if (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0)
+			{
+				// order doesn't matter here, so keep it the same as copy/paste
+				activateEntities(newPosition, direction);
+				currentEnt->entityVersion = 0;
+			}
+			else if (targetTile->tiletype == TileType::COAL && targetTile->tileVersion == 1)
+			{
+				currentEnt->entityVersion = 0;
+			}
+			else
+			{
+				activateEntities(newPosition, direction);
+			}
+		}
+	}
+	else
+	{
+		activateEntities(newPosition, direction);
+	}
+	
+}
 
 Level::Level()
 {
