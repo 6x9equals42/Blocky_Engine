@@ -19,6 +19,7 @@ private:
 	int playerPos;
 	int startTile;
 	int exitTile;
+	bool canExit;
 
 
 	// internal input logic functions.
@@ -87,6 +88,7 @@ public:
 	// input logic functions. These could also maybe be an individual class.
 	void input(Direction direction);
 	
+	void updateTrees();
 
 
 	Level();

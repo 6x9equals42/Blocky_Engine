@@ -20,6 +20,7 @@ void StatePlay::draw(Game* game, const float dt)
 void StatePlay::update(Game* game, const float dt)
 {
 	// TODO tree logic should be called from here.
+	this->level.updateTrees();
 	return;
 }
 

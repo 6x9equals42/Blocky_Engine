@@ -139,11 +139,12 @@ void Level::loadTiles(const std::string& filename)
 
 	this->tileBank[TileType::SAPLING] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(192, 64)), 
-			SpriteInfo(sf::Vector2i(256, 0)),
-			SpriteInfo(sf::Vector2i(64, 64)),
-			SpriteInfo(sf::Vector2i(0, 128)),
-			SpriteInfo(sf::Vector2i(256, 64)) },
+		{ SpriteInfo(sf::Vector2i(192, 64)), // basic sapling
+			SpriteInfo(sf::Vector2i(256, 0)), // sapling with light
+			SpriteInfo(sf::Vector2i(64, 64)), // sapling with water-next
+			SpriteInfo(sf::Vector2i(64, 64)), // sapling with perma water
+			SpriteInfo(sf::Vector2i(0, 128)), // sapling fully grown
+			SpriteInfo(sf::Vector2i(256, 64)) }, // burned
 			TileType::SAPLING);
 
 	//this->tileBank[TileType::TREE] = Tile(textures.getTexture("spritesheet"), { SpriteInfo(sf::Vector2i(0, 128)) }, TileType::TREE);
@@ -472,7 +473,6 @@ void Level::input(Direction direction)
 	}
 	else if (isBoat(playerPos))
 	{
-		// TODO for while on a boat. I'll do this logic later.
 		/////////////// 2nd batch of ideas
 		// for side of boat
 			// check if it's walkable only to the sides of the boat
@@ -759,7 +759,8 @@ void Level::activateEntities(int position, Direction direction)
 			{
 				// change the bucket versions
 			}*/
-			if ((targetTile->tiletype == TileType::WATERWAY || targetTile->tiletype == TileType::WATERSOURCE) && !(isSubEntity(newPosition))) // TODO make sure this checks properly for which waterway types have water
+			if ((targetTile->tiletype == TileType::WATERWAY || targetTile->tiletype == TileType::WATERSOURCE) && 
+				targetTile->tileVersion < 4 && !(isSubEntity(newPosition))) // TODO make sure this checks properly for which waterway types have water
 			{
 				// fill the one bucket
 				currentEnt->entityVersion = 1;
@@ -800,10 +801,12 @@ void Level::activateEntities(int position, Direction direction)
 				return;
 			}
 			// watering a sapling
-			else if (targetTile->tiletype == TileType::SAPLING && targetTile->tileVersion == 0)  // TODO also make sure to account for different tileversinos here
+			else if (targetTile->tiletype == TileType::SAPLING && 
+				(targetTile->tileVersion < 3))
 			{
 				//water the sapling
-				// TODO add tree versions and change this one.
+				targetTile->tileVersion = 3;
+
 				currentEnt->entityVersion = 0;
 				// don't need to acctivate 'cause it's the end.
 				return;
@@ -823,15 +826,15 @@ void Level::activateEntities(int position, Direction direction)
 				return;
 			}
 			// using it on a sapling
-			else if (targetTile->tiletype == TileType::SAPLING && targetTile->tileVersion == 0)  // TODO ditto as above
+			else if (targetTile->tiletype == TileType::SAPLING) 
 			{
-				// TODO change the version of the sapling tile.
-
+				targetTile->tileVersion = 5;
 				// if already a tree, make it burn!!!
 				return;
 			}
 			// dousing it
-			else if ((targetTile->tiletype == TileType::WATERWAY || targetTile->tiletype == TileType::WATERSOURCE) && !(isSubEntity(newPosition)))
+			else if ((targetTile->tiletype == TileType::WATERWAY || targetTile->tiletype == TileType::WATERSOURCE) && 
+				targetTile->tileVersion < 4 && !(isSubEntity(newPosition)))
 			{
 				currentEnt->entityVersion = 1;
 			}
@@ -861,8 +864,6 @@ void Level::activateEntities(int position, Direction direction)
 	}
 }
 
-// TODO Replace every tiletype == waterway with also || tiletype == watersource. because it should still work!
-
 bool Level::isRowable(int position, Direction direction)
 {
 	int newPosition = this->nextTile(position, direction);
@@ -883,7 +884,7 @@ bool Level::isRowable(int position, Direction direction)
 		}
 	}
 
-	if ((tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) && !isRock)
+	if ((tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) && !isRock && tileVersion < 4)
 	{
 		return true;
 	}
@@ -904,7 +905,7 @@ bool Level::isBoat(int position)
 
 bool Level::isPushableBoat(int position, Direction direction)
 {
-	std::cout << "testing pushes";
+	//std::cout << "testing pushes";
 	int newPosition = this->nextTile(position, direction);
 
 	if (newPosition == -1)
@@ -922,10 +923,10 @@ bool Level::isPushableBoat(int position, Direction direction)
 		}
 	}
 
-	if ((tiletype != TileType::WATERWAY && tiletype != TileType::WATERSOURCE) ||
+	if ((tiletype != TileType::WATERWAY && tiletype != TileType::WATERSOURCE && tiletype != TileType::VOID) ||
 		(isSubEntity(position) && entityType == EntityType::ROCK))
 	{
-		std::cout << "cannot push";
+		//std::cout << "cannot push";
 		return false;
 	}
 
@@ -934,7 +935,7 @@ bool Level::isPushableBoat(int position, Direction direction)
 		if (entity.pos == newPosition)
 		{
 			// there is an entity in the next tile!
-			std::cout << "recursing";
+			//std::cout << "recursing";
 			return isPushableBoat(newPosition, direction);
 		}
 	}
@@ -944,13 +945,14 @@ bool Level::isPushableBoat(int position, Direction direction)
 void Level::pushBoats(int position, Direction direction)
 {
 	int newPosition = this->nextTile(position, direction);
+	std::cout << "PUSH\n";
 
 	// call push on the entity in the next tile.
 	for (auto entity : subEntities)
 	{
 		if (entity.pos == newPosition)
 		{
-			pushEntities(newPosition, direction);
+			pushBoats(newPosition, direction);
 			break;
 		}
 	}
@@ -995,6 +997,86 @@ void Level::boatMove(Direction direction)
 		}
 	}
 	playerPos = nextTile(playerPos, direction);
+}
+
+void Level::updateTrees()
+{
+	// TODO change so it is called after receiving input, so it doesn't get called every frame
+	// same with updateWater();
+	bool allAreGrown = true;
+
+	for (int index = 0; index < this->tiles.size(); ++index)
+	{
+		if (this->tiles[index].tiletype == TileType::SAPLING)
+		{
+			if (this->tiles[index].tileVersion == 4) {}
+			else if (this->tiles[index].tileVersion == 5)
+				allAreGrown = false;
+			else
+			{
+				// determine whether there is light
+				bool hasLight = false;
+				if ((this->tiles[nextTile(index, Direction::LEFT)].tiletype == TileType::COAL &&
+					this->tiles[nextTile(index, Direction::LEFT)].tileVersion == 1) ||
+					(this->tiles[nextTile(index, Direction::RIGHT)].tiletype == TileType::COAL &&
+						this->tiles[nextTile(index, Direction::RIGHT)].tileVersion == 1) ||
+						(this->tiles[nextTile(index, Direction::UP)].tiletype == TileType::COAL &&
+							this->tiles[nextTile(index, Direction::UP)].tileVersion == 1) ||
+							(this->tiles[nextTile(index, Direction::DOWN)].tiletype == TileType::COAL &&
+								this->tiles[nextTile(index, Direction::DOWN)].tileVersion == 1))
+				{
+					hasLight = true;
+				}
+				else
+				{
+					for (auto entity : this->entities)
+					{
+						if (entity.entityType == EntityType::TORCH)
+						{
+							if (entity.pos == nextTile(index, Direction::LEFT) ||
+								entity.pos == nextTile(index, Direction::RIGHT) ||
+								entity.pos == nextTile(index, Direction::UP) ||
+								entity.pos == nextTile(index, Direction::DOWN))
+							{
+								hasLight = true;
+								break;
+							}
+						}
+					}
+				}
+
+				// determine if there is an adjacent water tile
+				bool nextToWater = false;
+				if ((isRowable(index, Direction::LEFT)) ||
+					(isRowable(index, Direction::RIGHT)) ||
+					(isRowable(index, Direction::UP)) ||
+					(isRowable(index, Direction::DOWN)))
+				{
+					nextToWater = true;
+				}
+
+				if (hasLight)
+				{
+					if (nextToWater || this->tiles[index].tileVersion == 3)
+						tiles[index].tileVersion = 4;
+					else
+						tiles[index].tileVersion = 1;
+				}
+				else
+				{
+					if (this->tiles[index].tileVersion == 3)
+						tiles[index].tileVersion = 3;
+					else if (nextToWater)
+						this->tiles[index].tileVersion = 2;
+					else
+						this->tiles[index].tileVersion = 0;
+				}
+				if (tiles[index].tileVersion != 4)
+					allAreGrown = false;
+			}
+		}
+	}
+	//TODO if all are grown, activate exit
 }
 
 Level::Level()
