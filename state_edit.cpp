@@ -115,7 +115,7 @@ void StateEdit::handleInput(Game* game)
 		}
 		case sf::Event::MouseButtonPressed:
 		{
-			std::cout << position.x << " " << position.y << "\n";
+			//std::cout << position.x << " " << position.y << "\n";
 			if (event.mouseButton.button == sf::Mouse::Left)
 			{
 				level.selectTileByPos(position);

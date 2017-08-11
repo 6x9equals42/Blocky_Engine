@@ -344,28 +344,34 @@ void Level::input(Direction direction)
 	{
 		if (isWalkable(playerPos, direction))
 		{
+			//std::cout << "I can walk...";
 			if (isEntity(nextTile(playerPos, direction)))
 			{
+				//std::cout << "There is an entity...";
 				if (isPushableEntity(playerPos, direction))
 				{
+					//std::cout << "I can push it \n";
 					playerFace(direction);
 					pushEntities(playerPos, direction);
 					playerMove(direction);
 				}
 				else
 				{
+					//std::cout << "I cannot push it \n";
 					playerFace(direction);
-					activateEntities(playerPos, direction);
+					activateEntities(nextTile(playerPos, direction), direction);
 				}
 			}
 			else
 			{
+				//std::cout << "It is blank\n";
 				playerMove(direction);
 				playerFace(direction);
 			}
 		}
 		else
 		{
+			//std::cout << "not walkable \n";
 			playerFace(direction);
 		}
 	}
@@ -461,6 +467,7 @@ bool Level::isPushableEntity(int position, Direction direction)
 
 void Level::pushEntities(int position, Direction direction)
 {
+	//std::cout << "pushing..\n";
 	int newPosition = this->nextTile(position, direction);
 
 	// call push on the entity in the next tile.
@@ -468,6 +475,7 @@ void Level::pushEntities(int position, Direction direction)
 	{
 		if (entity.pos == newPosition)
 		{
+			//std::cout << "the entity pushes another\n";
 			pushEntities(newPosition, direction);
 			break;
 		}
@@ -476,7 +484,7 @@ void Level::pushEntities(int position, Direction direction)
 	// TODO if entity ends in water, either set to subentity or delete. boats can go in empty waterways, but cannot move!
 
 	// move the entity on the current tile.
-	for (auto entity : entities)
+	for (auto &entity : entities)
 	{
 		if (entity.pos == position)
 		{
@@ -491,21 +499,39 @@ void Level::activateEntities(int position, Direction direction)
 	int newPosition = this->nextTile(position, direction);
 	Entity* currentEnt;
 	Entity* nextEnt;
+	if (newPosition == -1)
+		return;
 
 	Tile* targetTile = &tiles[newPosition];
 
 	// get the references of both entities
-	for (auto &entity : entities)
+	for (int index = 0; index < entities.size(); ++index)
+	{
+		if (entities[index].pos == position)
+		{
+			//std::cout << "INTIIALIZED";
+			currentEnt = &entities[index];
+		}
+		if (entities[index].pos == newPosition)
+		{
+			nextEnt = &entities[index];
+		}
+	}
+
+	bool safeToCheck = isEntity(newPosition);
+
+	/*for (auto &entity : entities)
 	{
 		if (entity.pos == position)
 		{
+			std::cout << "INITIALIZED";
 			currentEnt = &entity;
 		}
 		if (entity.pos == newPosition)
 		{
 			nextEnt = &entity;
 		}
-	}
+	}*/
 
 	// calling activate is interspersed within the conditionals to control chain behavior
 
@@ -525,30 +551,31 @@ void Level::activateEntities(int position, Direction direction)
 				// fill the one bucket
 				currentEnt->entityVersion = 1;
 				// don't need to activate cause its the end
+				return;
 			}
-			else
-				activateEntities(newPosition, direction);
 		}
 		// emptying a bucket
 		else if (currentEnt->entityVersion == 1)
 		{
 			// passing to next bucket
-			if (nextEnt->entityType == EntityType::BUCKET && nextEnt->entityVersion == 0) // TODO make it so only pours 1 ahead at a time. (put activate call before.
+			if (safeToCheck && (nextEnt->entityType == EntityType::BUCKET && nextEnt->entityVersion == 0)) // TODO make it so only pours 1 ahead at a time. (put activate call before.
 			{
 				//activate next
 				activateEntities(newPosition, direction);
 				// pour to next bucket
 				currentEnt->entityVersion = 0;
 				nextEnt->entityVersion = 1;
+				return;
 			}
 			// putting out a torch
-			else if (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0)
+			else if (safeToCheck && (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0))
 			{
 				// put out torch
 				nextEnt->entityVersion = 1;
 				currentEnt->entityVersion = 0;
 				// then activate
 				activateEntities(newPosition, direction);
+				return;
 			}
 			// putting out a fire
 			else if (targetTile->tiletype == TileType::COAL && targetTile->tileVersion == 1)
@@ -557,6 +584,7 @@ void Level::activateEntities(int position, Direction direction)
 				targetTile->tileVersion = 0;
 				currentEnt->entityVersion = 0;
 				// don't need to acctivate 'cause it's the end.
+				return;
 			}
 			// watering a sapling
 			else if (targetTile->tiletype == TileType::SAPLING && targetTile->tileVersion == 0)  // TODO also make sure to account for different tileversinos here
@@ -565,10 +593,7 @@ void Level::activateEntities(int position, Direction direction)
 				// TODO add tree versions and change this one.
 				currentEnt->entityVersion = 0;
 				// don't need to acctivate 'cause it's the end.
-			}
-			else
-			{
-				activateEntities(newPosition, direction);
+				return;
 			}
 		}
 	}
@@ -577,11 +602,12 @@ void Level::activateEntities(int position, Direction direction)
 		// using the current torch
 		if (currentEnt->entityVersion == 0)
 		{
-			if (nextEnt->entityType == EntityType::TORCH)
+			if (safeToCheck && nextEnt->entityType == EntityType::TORCH)
 			{
 				// activate the next first before making sure the next is on
 				activateEntities(newPosition, direction);
 				nextEnt->entityVersion = 0;
+				return;
 			}
 			// using it on a sapling
 			else if (targetTile->tiletype == TileType::SAPLING && targetTile->tileVersion == 0)  // TODO ditto as above
@@ -589,32 +615,29 @@ void Level::activateEntities(int position, Direction direction)
 				// TODO change the version of the sapling tile.
 
 				// if already a tree, make it burn!!!
-			}
-			else
-			{
-				activateEntities(newPosition, direction);
+				return;
 			}
 		}
 		// lighting the current torch
 		else if (currentEnt->entityVersion == 1)
 		{
-			if (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0)
+			if (safeToCheck && (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0))
 			{
+				//std::cout << "THIS PART IS CALLED \n";
 				// order doesn't matter here, so keep it the same as copy/paste
 				activateEntities(newPosition, direction);
 				currentEnt->entityVersion = 0;
+				return;
 			}
 			else if (targetTile->tiletype == TileType::COAL && targetTile->tileVersion == 1)
 			{
 				currentEnt->entityVersion = 0;
+				return;
 			}
-			else
-			{
-				activateEntities(newPosition, direction);
-			}
+
 		}
 	}
-	else
+	if (isEntity(newPosition))
 	{
 		activateEntities(newPosition, direction);
 	}

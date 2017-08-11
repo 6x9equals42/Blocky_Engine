@@ -17,7 +17,9 @@ void Entity::update()
 {}
 
 Entity::Entity()
-{}
+{
+	this->entityVersion = -1;
+}
 
 Entity::Entity(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs, const EntityType entityType)
 {
