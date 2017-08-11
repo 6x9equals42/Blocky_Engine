@@ -24,10 +24,12 @@ void Level::load(const std::string& filename, unsigned int width, unsigned int h
 	this->height = height;
 
 	int numEntities;
+	int numSubEntities;
 
 	inputFile.read((char*)&startTile, sizeof(int));
 	inputFile.read((char*)&exitTile, sizeof(int));
 
+	// load entities
 	inputFile.read((char*)&numEntities, sizeof(int));
 	for (int index = 0; index < numEntities; ++index)
 	{
@@ -41,6 +43,21 @@ void Level::load(const std::string& filename, unsigned int width, unsigned int h
 		inputFile.read((char*)&entity.pos, sizeof(int));
 	}
 
+	// load subentities
+	inputFile.read((char*)&numSubEntities, sizeof(int));
+	for (int index = 0; index < numSubEntities; ++index)
+	{
+		EntityType entitytype;
+		inputFile.read((char*)&entitytype, sizeof(int));
+
+		this->subEntities.push_back(entityBank.at(entitytype));
+
+		Entity& entity = this->subEntities.back();
+		inputFile.read((char*)&entity.entityVersion, sizeof(int));
+		inputFile.read((char*)&entity.pos, sizeof(int));
+	}
+
+	// load tiles
 	for (int index = 0; index < int(this->width * this->height); ++index)
 	{
 		TileType tiletype;
@@ -137,12 +154,33 @@ void Level::loadPlayer()
 	playerPos = startTile;
 }
 
+void Level::settleEntities()
+{
+	std::vector<Entity>::iterator it = entities.begin();
+	std::cout << "settling entities \n";
+	std::cout << "before, we have " << subEntities.size() << " subentities \n";
+
+	while (it != entities.end())
+	{
+		if (tiles[it->pos].tiletype == TileType::WATERWAY && !isWalkable(it->pos, Direction::NONE))
+		{
+			std::cout << "found one to settle at " << it->pos << "\n";
+			subEntities.push_back(*it);
+			it = entities.erase(it);
+		}
+		else
+			++it;
+	}	
+}
+
 void Level::save(const std::string& filename)
 {
+	settleEntities();
 	std::ofstream outputFile;
 	outputFile.open(filename + ".level", std::ios::out | std::ios::binary);
 
 	int numEntities = this->entities.size();
+	int numSubEntities = this->subEntities.size();
 
 	outputFile.write((char*)&startTile, sizeof(int));
 	outputFile.write((char*)&exitTile, sizeof(int));
@@ -150,6 +188,14 @@ void Level::save(const std::string& filename)
 	outputFile.write((char*)&numEntities, sizeof(int));
 
 	for (auto entity : this->entities)
+	{
+		outputFile.write((char*)&entity.entityType, sizeof(int));
+		outputFile.write((char*)&entity.entityVersion, sizeof(int));
+		outputFile.write((char*)&entity.pos, sizeof(int));
+	}
+	outputFile.write((char*)&numSubEntities, sizeof(int));
+
+	for (auto entity : this->subEntities)
 	{
 		outputFile.write((char*)&entity.entityType, sizeof(int));
 		outputFile.write((char*)&entity.entityVersion, sizeof(int));
@@ -196,6 +242,16 @@ void Level::draw(sf::RenderWindow& window, float dt)
 			this->tiles[y*this->width + x].draw(window, dt);
 		}
 	}
+	// go through each subentity and draw at the right position.
+	for (auto entity : this->subEntities)
+	{
+		sf::Vector2f spritePos;
+		spritePos.x = (entity.pos % this->width) * 64;
+		spritePos.y = int(entity.pos / this->width) * 64;
+		entity.sprite.setPosition(spritePos);
+
+		entity.draw(window, dt);
+	}
 	// go through each entity and draw at the right position.
 	for (auto entity : this->entities)
 	{
@@ -219,8 +275,6 @@ void Level::drawPlayer(sf::RenderWindow& window, float dt)
 		player.sprite.setPosition(pos);
 		player.draw(window, dt);
 	}
-
-
 }
 
 int Level::selectTileByPos(sf::Vector2f pos)
@@ -238,7 +292,7 @@ int Level::selectTileByPos(sf::Vector2f pos)
 
 void Level::changeTile(TileType tiletype)
 {
-	if (tiletype != tiles[selectedTile].tiletype && selectedTile > -1)
+	if (selectedTile > -1 && tiletype != tiles[selectedTile].tiletype)
 	{
 		this->tiles.insert(tiles.begin() + selectedTile, tileBank.at(tiletype));
 		this->tiles.erase(tiles.begin() + selectedTile + 1);
@@ -264,6 +318,9 @@ void Level::deleteEntity()
 	entities.erase(std::remove_if(entities.begin(), entities.end(), 
 		[&](const Entity entity)->bool{ return entity.pos == selectedTile; }),  // would you look at that, a lambda!
 		entities.end());
+	subEntities.erase(std::remove_if(subEntities.begin(), subEntities.end(),
+		[&](const Entity entity)->bool { return entity.pos == selectedTile; }), 
+		subEntities.end());
 }
 
 void Level::cycleEntityVersion()
@@ -314,6 +371,10 @@ int Level::nextTile(int position, Direction direction)
 		if (position % this->width == -1 % this->width)
 			return -1;
 		return position + 1;
+	}
+	case Direction::NONE:
+	{
+		return position;
 	}
 	default:
 		return -1;
@@ -428,7 +489,7 @@ bool Level::isWalkable(int position, Direction direction)
 	if (tiletype == TileType::BRIDGE ||
 		(tiletype == TileType::COAL && tileVersion == 0) ||
 		tiletype == TileType::FLAT ||
-		(tiletype == TileType::WATERWAY && this->isSubEntity(position)))
+		(tiletype == TileType::WATERWAY && this->isSubEntity(newPosition)))
 	{
 		return true;
 	}
@@ -446,9 +507,21 @@ bool Level::isPushableEntity(int position, Direction direction)
 	TileType tiletype = this->tiles[newPosition].tiletype;
 	int tileVersion = this->tiles[newPosition].tileVersion;
 
+	EntityType entityType;
+	for (auto entity : entities)
+	{
+		if (entity.pos == position)
+		{
+			entityType = entity.entityType;
+		}
+	}
+
 	if (tiletype == TileType::INACCESSIBLE ||
 		tiletype == TileType::SAPLING ||
-		(tiletype == TileType::COAL && tileVersion == 1))
+		(tiletype == TileType::COAL && tileVersion == 1) ||
+		(isEntity(position) && tiletype == TileType::WATERWAY && tileVersion == 0 && // TODO update the waterversion when i add more types
+			(entityType == EntityType::BUCKET || entityType == EntityType::TORCH)) &&
+			!this->isSubEntity(newPosition)) 
 	{
 		return false;
 	}
@@ -519,19 +592,6 @@ void Level::activateEntities(int position, Direction direction)
 	}
 
 	bool safeToCheck = isEntity(newPosition);
-
-	/*for (auto &entity : entities)
-	{
-		if (entity.pos == position)
-		{
-			std::cout << "INITIALIZED";
-			currentEnt = &entity;
-		}
-		if (entity.pos == newPosition)
-		{
-			nextEnt = &entity;
-		}
-	}*/
 
 	// calling activate is interspersed within the conditionals to control chain behavior
 
@@ -637,7 +697,7 @@ void Level::activateEntities(int position, Direction direction)
 
 		}
 	}
-	if (isEntity(newPosition))
+	if (safeToCheck)
 	{
 		activateEntities(newPosition, direction);
 	}

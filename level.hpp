@@ -10,7 +10,7 @@
 #include "entity.hpp"
 #include "player.hpp"
 
-enum class Direction { UP, DOWN, LEFT, RIGHT };
+enum class Direction { UP, DOWN, LEFT, RIGHT, NONE };
 
 class Level
 {
@@ -65,6 +65,7 @@ public:
 	void reset(); // this will need to change to actually reload the level instead of just resetting player poss
 
 	void save(const std::string& filename);
+	void settleEntities();
 	// this function only exists to easily generate blank things, will be removed.
 	// Edit it's contents to create levels of different sizes.
 	void createBlankLevel();
