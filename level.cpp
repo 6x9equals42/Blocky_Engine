@@ -123,8 +123,7 @@ void Level::loadTiles(const std::string& filename)
 		{ SpriteInfo(sf::Vector2i(0, 64)),
 			SpriteInfo(sf::Vector2i(320, 64)),
 			SpriteInfo(sf::Vector2i(320, 0)),
-			SpriteInfo(sf::Vector2i(384, 0)),
-			SpriteInfo(sf::Vector2i(384, 128)) },
+			SpriteInfo(sf::Vector2i(384, 0)) },
 			TileType::WATERSOURCE); // The only reason this type exists is to enable the logic for water flow.
 
 	/*this->tileBank[TileType::DRAIN] = 
@@ -189,7 +188,8 @@ void Level::settleEntities()
 
 	while (it != entities.end())
 	{
-		if (tiles[it->pos].tiletype == TileType::WATERWAY && !isWalkable(it->pos, Direction::NONE))
+		if ((tiles[it->pos].tiletype == TileType::WATERWAY || tiles[it->pos].tiletype == TileType::WATERSOURCE) && 
+			!isWalkable(it->pos, Direction::NONE))
 		{
 			//std::cout << "found one to settle at " << it->pos << "\n";
 			if (it->entityType == EntityType::ROCK)
@@ -470,7 +470,7 @@ void Level::input(Direction direction)
 			playerFace(direction);
 		}
 	}
-	else
+	else if (isBoat(playerPos))
 	{
 		// TODO for while on a boat. I'll do this logic later.
 		/////////////// 2nd batch of ideas
@@ -491,13 +491,88 @@ void Level::input(Direction direction)
 					// no, move the boat, move the player ** moveBoat, movePlayer **
 				// if not, face
 
+		// get the direction the boat is facing
+		int boatDir;
+		for (auto entity : subEntities)
+		{
+			if (entity.pos == playerPos)
+				boatDir = entity.entityVersion;
+		}
+
+		if (((direction == Direction::UP || direction == Direction::DOWN) && boatDir == 2) ||
+			((direction == Direction::LEFT || direction == Direction::RIGHT) && boatDir == 3))
+		{
+			if (isWalkable(playerPos, direction))
+			{
+				//std::cout << "I can walk...";
+				if (isEntity(nextTile(playerPos, direction)))
+				{
+					//std::cout << "There is an entity...";
+					if (isPushableEntity(playerPos, direction))
+					{
+						//std::cout << "I can push it \n";
+						playerFace(direction);
+						pushEntities(playerPos, direction);
+						settleEntities();
+						playerMove(direction);
+					}
+					else
+					{
+						//std::cout << "I cannot push it \n";
+						playerFace(direction);
+						activateEntities(nextTile(playerPos, direction), direction);
+					}
+				}
+				else
+				{
+					//std::cout << "It is blank\n";
+					playerMove(direction);
+					playerFace(direction);
+				}
+			}
+			else
+			{
+				//std::cout << "not walkable \n";
+				playerFace(direction);
+			}
+		}
+		else
+		{
+			if (isRowable(playerPos, direction))
+			{
+				if (isBoat(nextTile(playerPos, direction)))
+				{
+					if (isPushableBoat(playerPos, direction))
+					{
+						pushBoats(nextTile(playerPos, direction), direction);
+						playerFace(direction);
+						boatMove(direction);
+					}
+					else
+					{
+						playerFace(direction);
+					}
+				}
+				else
+				{
+					playerFace(direction);
+					boatMove(direction);
+				}
+			}
+			else
+			{
+				playerFace(direction);
+			}
+		}
+		// TODO Check boat logic with empty waterways. That will probably change some things. It's probably safe to assume that no water adjacent to wash,
+		// but make sure boats can't move when they're just in pits.
 	}
 
 }
 
 bool Level::onLand(int position)
 {
-	if (tiles[position].tiletype != TileType::WATERWAY)
+	if (tiles[position].tiletype != TileType::WATERWAY && tiles[position].tiletype != TileType::WATERSOURCE)
 		return true;
 	for (auto entity : subEntities)
 	{
@@ -541,7 +616,7 @@ bool Level::isWalkable(int position, Direction direction)
 	if (tiletype == TileType::BRIDGE ||
 		(tiletype == TileType::COAL && tileVersion == 0) ||
 		tiletype == TileType::FLAT ||
-		(tiletype == TileType::WATERWAY && this->isSubEntity(newPosition)))
+		((tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) && this->isSubEntity(newPosition)))
 	{
 		return true;
 	}
@@ -571,7 +646,7 @@ bool Level::isPushableEntity(int position, Direction direction)
 	if (tiletype == TileType::INACCESSIBLE ||
 		tiletype == TileType::SAPLING ||
 		(tiletype == TileType::COAL && tileVersion == 1) ||
-		(isEntity(position) && tiletype == TileType::WATERWAY && tileVersion < 4 &&
+		(isEntity(position) && (tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) && tileVersion < 4 &&
 			(entityType == EntityType::BUCKET || entityType == EntityType::TORCH)) &&
 			!this->isSubEntity(newPosition)) 
 	{
@@ -634,6 +709,15 @@ void Level::pushEntities(int position, Direction direction)
 			entities.end());
 	}
 
+	if (tiles[newPosition].tiletype == TileType::VOID)
+	{
+		entities.erase(std::remove_if(entities.begin(), entities.end(),
+			[&](const Entity entity)->bool { return entity.pos == newPosition; }),
+			entities.end());
+		subEntities.erase(std::remove_if(subEntities.begin(), subEntities.end(),
+			[&](const Entity entity)->bool { return entity.pos == newPosition; }),
+			subEntities.end());
+	}
 }
 
 void Level::activateEntities(int position, Direction direction)
@@ -675,7 +759,7 @@ void Level::activateEntities(int position, Direction direction)
 			{
 				// change the bucket versions
 			}*/
-			if (targetTile->tiletype == TileType::WATERWAY && !(isSubEntity(newPosition))) // TODO make sure this checks properly for which waterway types have water
+			if ((targetTile->tiletype == TileType::WATERWAY || targetTile->tiletype == TileType::WATERSOURCE) && !(isSubEntity(newPosition))) // TODO make sure this checks properly for which waterway types have water
 			{
 				// fill the one bucket
 				currentEnt->entityVersion = 1;
@@ -747,7 +831,7 @@ void Level::activateEntities(int position, Direction direction)
 				return;
 			}
 			// dousing it
-			else if (targetTile->tiletype == TileType::WATERWAY && !(isSubEntity(newPosition)))
+			else if ((targetTile->tiletype == TileType::WATERWAY || targetTile->tiletype == TileType::WATERSOURCE) && !(isSubEntity(newPosition)))
 			{
 				currentEnt->entityVersion = 1;
 			}
@@ -775,7 +859,142 @@ void Level::activateEntities(int position, Direction direction)
 	{
 		activateEntities(newPosition, direction);
 	}
-	
+}
+
+// TODO Replace every tiletype == waterway with also || tiletype == watersource. because it should still work!
+
+bool Level::isRowable(int position, Direction direction)
+{
+	int newPosition = this->nextTile(position, direction);
+
+	if (newPosition == -1)
+		return false;
+
+	TileType tiletype = this->tiles[newPosition].tiletype;
+	int tileVersion = this->tiles[newPosition].tileVersion;
+
+	bool isRock = false;
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == newPosition && entity.entityType == EntityType::ROCK)
+		{
+			isRock = true;
+			break;
+		}
+	}
+
+	if ((tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) && !isRock)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool Level::isBoat(int position)
+{
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == position && entity.entityType == EntityType::BOAT)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Level::isPushableBoat(int position, Direction direction)
+{
+	std::cout << "testing pushes";
+	int newPosition = this->nextTile(position, direction);
+
+	if (newPosition == -1)
+		return false;
+
+	TileType tiletype = this->tiles[newPosition].tiletype;
+	int tileVersion = this->tiles[newPosition].tileVersion;
+
+	EntityType entityType;
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == position)
+		{
+			entityType = entity.entityType;
+		}
+	}
+
+	if ((tiletype != TileType::WATERWAY && tiletype != TileType::WATERSOURCE) ||
+		(isSubEntity(position) && entityType == EntityType::ROCK))
+	{
+		std::cout << "cannot push";
+		return false;
+	}
+
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == newPosition)
+		{
+			// there is an entity in the next tile!
+			std::cout << "recursing";
+			return isPushableBoat(newPosition, direction);
+		}
+	}
+	return true;
+}
+
+void Level::pushBoats(int position, Direction direction)
+{
+	int newPosition = this->nextTile(position, direction);
+
+	// call push on the entity in the next tile.
+	for (auto entity : subEntities)
+	{
+		if (entity.pos == newPosition)
+		{
+			pushEntities(newPosition, direction);
+			break;
+		}
+	}
+
+	// move the entity on the current tile. 
+	// TODO delete when push into void for normal push
+	for (auto &entity : entities)
+	{
+		if (entity.pos == position)
+		{
+			entity.pos = newPosition;
+			break;
+		}
+	}
+	for (auto &entity : subEntities)
+	{
+		if (entity.pos == position)
+		{
+			entity.pos = newPosition;
+			break;
+		}
+	}
+	if (tiles[newPosition].tiletype == TileType::VOID)
+	{
+		entities.erase(std::remove_if(entities.begin(), entities.end(),
+			[&](const Entity entity)->bool { return entity.pos == newPosition; }),
+			entities.end());
+		subEntities.erase(std::remove_if(subEntities.begin(), subEntities.end(),
+			[&](const Entity entity)->bool { return entity.pos == newPosition; }),
+			subEntities.end());
+	}
+}
+
+void Level::boatMove(Direction direction)
+{
+	for (auto &entity : subEntities)
+	{
+		if (entity.pos == playerPos)
+		{
+			entity.pos = nextTile(playerPos, direction);
+			break;
+		}
+	}
+	playerPos = nextTile(playerPos, direction);
 }
 
 Level::Level()

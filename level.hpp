@@ -34,6 +34,10 @@ private:
 	void activateEntities(int position, Direction direction);
 	// and boat logic
 	bool isRowable(int position, Direction direction);
+	bool isBoat(int position);
+	bool isPushableBoat(int position, Direction direction);
+	void pushBoats(int position, Direction direction);
+	void boatMove(Direction direction);
 
 public:
 	unsigned int width;
