@@ -21,6 +21,7 @@ private:
 	int startTile;
 	int exitTile;
 	bool canExit;
+	bool levelCompleted;
 
 	History levelHistory;
 
@@ -70,6 +71,8 @@ public:
 	// and a workaround using the player class
 	Player exit;
 
+	float time;
+
 	// rendering
 	void draw(sf::RenderWindow& window, float dt);
 	// rendering player (only for play)
@@ -80,7 +83,7 @@ public:
 	void loadTiles(const std::string& filename);
 	void loadEntities(const std::string& filename);
 	void loadPlayer();
-	void load(const std::string& filename, unsigned int width, unsigned int height);
+	void load(const std::string& filename);
 	void reset(); 
 	void reload();
 
@@ -97,17 +100,21 @@ public:
 	void setEntity(EntityType entitytype);
 	void cycleTileVersion();
 	void cycleEntityVersion();
+	void setStart();
+	void setExit();
 
 	// input logic functions. These could also maybe be an individual class.
 	void input(Direction direction);
 
 	void undo();
 	void clearHistory();
+
+	bool passedLevel();
 	
 	void updateTrees();
 	void updateWater();
 
 
 	Level();
-	Level(const std::string& filename, unsigned int width, unsigned int height);
+	Level(const std::string& filename);
 };

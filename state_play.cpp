@@ -4,6 +4,8 @@
 #include "state.hpp"
 #include "state_edit.hpp"
 
+#include <iostream>
+
 void StatePlay::draw(Game* game, const float dt)
 {
 	game->window.clear(sf::Color::Black);
@@ -19,6 +21,10 @@ void StatePlay::draw(Game* game, const float dt)
 
 void StatePlay::update(Game* game, const float dt)
 {
+	level.time += dt;
+	// TODO here do if level.level finished, load the next level into level.
+	if (level.passedLevel())
+		std::cout << "we did it hooray!\n";
 	return;
 }
 
@@ -81,7 +87,7 @@ void StatePlay::init(Game* game)
 
 StatePlay::StatePlay()
 {
-	level = Level("test", 8, 8);
+	level = Level("level1");
 }
 
 StatePlay::StatePlay(Level level)

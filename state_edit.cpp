@@ -45,7 +45,7 @@ void StateEdit::handleInput(Game* game)
 				game->popState();
 			if (event.key.control && event.key.code == sf::Keyboard::S)
 			{
-				this->level.save("test");
+				this->level.save(this->level.filename);
 			}
 			if (event.key.code == sf::Keyboard::Num1)
 			{
@@ -111,6 +111,14 @@ void StateEdit::handleInput(Game* game)
 			{
 				game->changeState(new StatePlay(level));
 			}
+			if (event.key.code == sf::Keyboard::LBracket)
+			{
+				this->level.setStart();
+			}
+			if (event.key.code == sf::Keyboard::RBracket)
+			{
+				this->level.setExit();
+			}
 			break;
 		}
 		case sf::Event::MouseButtonPressed:
@@ -143,7 +151,7 @@ StateEdit::StateEdit()
 	//level = Level();
 	//level.createBlankLevel(); // for creating new levels..
 	
-	level = Level("test", 8, 8);
+	level = Level("level1");
 }
 
 StateEdit::StateEdit(Level level)

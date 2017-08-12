@@ -10,7 +10,7 @@
 
 #include <iostream> // TODO Remove this (and other ios before the end)
 
-void Level::load(const std::string& filename, unsigned int width, unsigned int height)
+void Level::load(const std::string& filename)
 {
 	loadTextures(filename);
 	loadTiles(filename);
@@ -20,14 +20,14 @@ void Level::load(const std::string& filename, unsigned int width, unsigned int h
 	std::ifstream inputFile;
 	inputFile.open(filename + ".level", std::ios::in | std::ios::binary);
 
-	this->width = width;
-	this->height = height;
+	inputFile.read((char*)&this->width, sizeof(int));
+	inputFile.read((char*)&this->height, sizeof(int));
 
 	int numEntities;
 	int numSubEntities;
 
-	inputFile.read((char*)&startTile, sizeof(int));
-	inputFile.read((char*)&exitTile, sizeof(int));
+	inputFile.read((char*)&this->startTile, sizeof(int));
+	inputFile.read((char*)&this->exitTile, sizeof(int));
 
 	// load entities
 	inputFile.read((char*)&numEntities, sizeof(int));
@@ -226,6 +226,9 @@ void Level::save(const std::string& filename)
 	int numEntities = this->entities.size();
 	int numSubEntities = this->subEntities.size();
 
+	outputFile.write((char*)&this->width, sizeof(int));
+	outputFile.write((char*)&this->height, sizeof(int));
+
 	outputFile.write((char*)&startTile, sizeof(int));
 	outputFile.write((char*)&exitTile, sizeof(int));
 
@@ -263,7 +266,7 @@ void Level::reload()
 	entities.clear();
 	subEntities.clear();
 
-	load(this->filename, this->width, this->height);
+	load(this->filename);
 	updateTrees();
 	stashLevelState();
 }
@@ -271,6 +274,11 @@ void Level::reload()
 void Level::reset()
 {
 	this->playerPos = this->startTile;
+}
+
+bool Level::passedLevel()
+{
+	return levelCompleted;
 }
 
 void Level::draw(sf::RenderWindow& window, float dt)
@@ -399,13 +407,23 @@ void Level::createBlankLevel()
 {
 	loadTextures("");
 	loadTiles("");
-	this->width = 8;
-	this->height = 8;
-	for (int index = 0; index < 64; ++index)
+	this->width = 16;
+	this->height = 12;
+	for (int index = 0; index < 192; ++index)
 	{
-		this->tiles.push_back(tileBank.at(TileType::INACCESSIBLE));
+		this->tiles.push_back(tileBank.at(TileType::VOID));
 	}
 	selectedTile = -1;
+}
+
+void Level::setStart()
+{
+	this->startTile = this->selectedTile;
+}
+
+void Level::setExit()
+{
+	this->exitTile = this->selectedTile;
 }
 
 // input handling functions
@@ -458,6 +476,11 @@ void Level::playerFace(Direction directio)
 
 void Level::input(Direction direction)
 {
+	// check if enough time has passed before processing another input
+	if (time < 0.08f)
+		return;
+	else
+		time = 0;
 	/////////////// My ideas for rn (this is just for on land!!)
 	// check if it's walkable
 		// if it's walkable, check if there's an entity next
@@ -597,6 +620,11 @@ void Level::input(Direction direction)
 		}
 	}
 	updateTrees();
+
+	if (canExit && playerPos == exitTile)
+		levelCompleted = true;
+	else
+		levelCompleted = false;
 
 	stashLevelState();
 }
@@ -1331,16 +1359,22 @@ void Level::clearHistory()
 Level::Level()
 {
 	selectedTile = -1;
+	levelCompleted = false;
+	time = 0;
+
+	this->filename = "level1";
 }
 
-Level::Level(const std::string& filename, unsigned int width, unsigned int height)
+Level::Level(const std::string& filename)
 {
 	this->filename = filename;
 	selectedTile = -1;
 	startTile = 58;
 	exitTile = 63;
-	load(filename, width, height);
+	load(filename);
 
 	clearHistory();
+	levelCompleted = false;
+	time = 0;
 
 }
