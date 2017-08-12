@@ -1,8 +1,12 @@
 #include <SFML/Graphics.hpp>
 
 #include "state_levels.hpp"
+#include "state.hpp"
+#include "state_play.hpp"
 
 #include <iostream>
+#include <string>
+#include <sys/stat.h>
 
 void LevelButton::draw(sf::RenderWindow& window, float dt)
 {
@@ -59,6 +63,12 @@ void StateLevels::draw(Game* game, const float dt)
 			// then draw it
 
 			this->levelButtons[y * 12 + x].draw(game->window, dt);
+
+			numbers.setString(std::to_string(y * 12 + x + 1));
+			numbers.setPosition(pos.x + 16, pos.y + 15);
+
+			game->window.draw(numbers);
+
 		}
 	}
 
@@ -196,7 +206,11 @@ void StateLevels::menuSelect(Game* game)
 	case 3:
 	{
 		// Select level
-		// game->pushState(new StatePlay(level + 1)) // need a new stateplay constructor.
+		struct stat buffer;
+		std::string filename = "level" + std::to_string(level + 1) + ".level";
+		std::cout << filename;
+		if (stat(filename.c_str(), &buffer) == 0)
+			game->pushState(new StatePlay(level + 1));
 		break;
 	}
 	default:
@@ -241,6 +255,10 @@ StateLevels::StateLevels()
 	menuClear.setCharacterSize(60);
 	menuClear.setString("CLEAR");
 	menuClear.setPosition(576.f, 576.f);
+
+	numbers.setFont(font);
+	numbers.setCharacterSize(20);
+
 
 	// and create the texture
 	buttonTex.loadFromFile("media/levelbuttons.png");

@@ -30,6 +30,7 @@ private:
 	sf::Font font;
 	sf::Text menuBack;
 	sf::Text menuClear;
+	sf::Text numbers;
 	std::vector<LevelButton> levelButtons;
 	sf::Texture buttonTex;
 	int level;

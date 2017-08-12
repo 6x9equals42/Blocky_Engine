@@ -5,6 +5,7 @@
 #include "state_edit.hpp"
 
 #include <iostream>
+#include <string>
 
 void StatePlay::draw(Game* game, const float dt)
 {
@@ -24,7 +25,18 @@ void StatePlay::update(Game* game, const float dt)
 	level.time += dt;
 	// TODO here do if level.level finished, load the next level into level.
 	if (level.passedLevel())
-		std::cout << "we did it hooray!\n";
+	{
+		struct stat buffer;
+		std::string filename = "level" + std::to_string(levelNum + 1) + ".level";
+		std::cout << filename;
+		if (stat(filename.c_str(), &buffer) == 0)
+		{
+			level = Level("level" + std::to_string(++levelNum));
+		}
+		else
+			game->popState();
+			
+	}
 	return;
 }
 
@@ -93,5 +105,11 @@ StatePlay::StatePlay()
 StatePlay::StatePlay(Level level)
 {
 	this->level = level;
+}
+
+StatePlay::StatePlay(int levelNum)
+{
+	level = Level("level" + std::to_string(levelNum));
+	this->levelNum = levelNum;
 }
 

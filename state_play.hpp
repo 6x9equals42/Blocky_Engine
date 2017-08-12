@@ -21,6 +21,9 @@ public:
 
 	virtual void init(Game* game);
 
+	int levelNum;
+
 	StatePlay();
 	StatePlay(Level level);
+	StatePlay(int levelNum);
 };
