@@ -21,6 +21,11 @@ private:
 	int exitTile;
 	bool canExit;
 
+	// maps for use of water updating
+	std::map<int, int> distanceUnsettled; // for dijkstra
+	std::map<int, int> distanceSettled; 
+	// and the recursive waterupdate function
+
 
 	// internal input logic functions.
 	bool onLand(int position);
@@ -89,6 +94,7 @@ public:
 	void input(Direction direction);
 	
 	void updateTrees();
+	void updateWater();
 
 
 	Level();

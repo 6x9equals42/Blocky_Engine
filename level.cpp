@@ -86,12 +86,16 @@ void Level::loadTiles(const std::string& filename)
 {
 	this->tileBank[TileType::BRIDGE] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(128, 0)), 
-			SpriteInfo(sf::Vector2i(384, 64)), 
-			SpriteInfo(sf::Vector2i(448, 0)),
-			SpriteInfo(sf::Vector2i(448, 64)),
-			SpriteInfo(sf::Vector2i(384, 192)),
-			SpriteInfo(sf::Vector2i(448, 128)) },
+		{ SpriteInfo(sf::Vector2i(128, 0)),   // water <- bridge ||
+			SpriteInfo(sf::Vector2i(384, 64)),  // water /\, bridge =
+			SpriteInfo(sf::Vector2i(448, 0)),   // water -> bridge ||
+			SpriteInfo(sf::Vector2i(448, 64)),   // water \/ bridge =
+			SpriteInfo(sf::Vector2i(512, 0)),   // water <- bridge =
+			SpriteInfo(sf::Vector2i(512, 64)),   // water /\ bridge ||
+			SpriteInfo(sf::Vector2i(512, 128)),   // water -> bridge =
+			SpriteInfo(sf::Vector2i(512, 192)),   // water \/ bridge ||
+			SpriteInfo(sf::Vector2i(384, 192)),  // no water, bridge =
+			SpriteInfo(sf::Vector2i(448, 128)) },   // no water, bridge ||
 			TileType::BRIDGE);
 
 	this->tileBank[TileType::FLAT] = 
@@ -111,20 +115,20 @@ void Level::loadTiles(const std::string& filename)
 
 	this->tileBank[TileType::WATERWAY] = 
 		Tile(textures.getTexture("spritesheet"), 
-		{ SpriteInfo(sf::Vector2i(0, 64)),
-			SpriteInfo(sf::Vector2i(320, 64)),
-			SpriteInfo(sf::Vector2i(320, 0)),
-			SpriteInfo(sf::Vector2i(384, 0)),
+		{ SpriteInfo(sf::Vector2i(0, 64)),      // <-
+			SpriteInfo(sf::Vector2i(320, 64)),  // /\ 
+			SpriteInfo(sf::Vector2i(320, 0)),   // ->
+			SpriteInfo(sf::Vector2i(384, 0)),   // \/
 			SpriteInfo(sf::Vector2i(384, 128)) },
 			TileType::WATERWAY); // TODO  + animations
 
+	// This is reimagined again. I think I will algorithmically determine direction
+	// based on proximity to sources for all waterways. Should also be useful for practicing
+	// writing algorithms.
 	this->tileBank[TileType::WATERSOURCE] =
 		Tile(textures.getTexture("spritesheet"),
-		{ SpriteInfo(sf::Vector2i(0, 64)),
-			SpriteInfo(sf::Vector2i(320, 64)),
-			SpriteInfo(sf::Vector2i(320, 0)),
-			SpriteInfo(sf::Vector2i(384, 0)) },
-			TileType::WATERSOURCE); // The only reason this type exists is to enable the logic for water flow.
+		{ SpriteInfo(sf::Vector2i(448, 192)) },
+			TileType::WATERSOURCE); 
 
 	/*this->tileBank[TileType::DRAIN] = 
 		Tile(textures.getTexture("spritesheet"), 
@@ -567,7 +571,9 @@ void Level::input(Direction direction)
 		// TODO Check boat logic with empty waterways. That will probably change some things. It's probably safe to assume that no water adjacent to wash,
 		// but make sure boats can't move when they're just in pits.
 	}
-
+	updateTrees();
+	// TODO remove this function to elsewhere, 'cause I don't want it called so often
+	updateWater();
 }
 
 bool Level::onLand(int position)
@@ -646,7 +652,7 @@ bool Level::isPushableEntity(int position, Direction direction)
 	if (tiletype == TileType::INACCESSIBLE ||
 		tiletype == TileType::SAPLING ||
 		(tiletype == TileType::COAL && tileVersion == 1) ||
-		(isEntity(position) && (tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) && tileVersion < 4 &&
+		(isEntity(position) && (tiletype == TileType::WATERWAY || tiletype == TileType::WATERSOURCE) &&
 			(entityType == EntityType::BUCKET || entityType == EntityType::TORCH)) &&
 			!this->isSubEntity(newPosition)) 
 	{
@@ -945,7 +951,7 @@ bool Level::isPushableBoat(int position, Direction direction)
 void Level::pushBoats(int position, Direction direction)
 {
 	int newPosition = this->nextTile(position, direction);
-	std::cout << "PUSH\n";
+	//std::cout << "PUSH\n";
 
 	// call push on the entity in the next tile.
 	for (auto entity : subEntities)
@@ -958,7 +964,6 @@ void Level::pushBoats(int position, Direction direction)
 	}
 
 	// move the entity on the current tile. 
-	// TODO delete when push into void for normal push
 	for (auto &entity : entities)
 	{
 		if (entity.pos == position)
@@ -1001,8 +1006,6 @@ void Level::boatMove(Direction direction)
 
 void Level::updateTrees()
 {
-	// TODO change so it is called after receiving input, so it doesn't get called every frame
-	// same with updateWater();
 	bool allAreGrown = true;
 
 	for (int index = 0; index < this->tiles.size(); ++index)
@@ -1016,13 +1019,17 @@ void Level::updateTrees()
 			{
 				// determine whether there is light
 				bool hasLight = false;
-				if ((this->tiles[nextTile(index, Direction::LEFT)].tiletype == TileType::COAL &&
+				if ((nextTile(index, Direction::LEFT) != -1 &&
+					this->tiles[nextTile(index, Direction::LEFT)].tiletype == TileType::COAL &&
 					this->tiles[nextTile(index, Direction::LEFT)].tileVersion == 1) ||
-					(this->tiles[nextTile(index, Direction::RIGHT)].tiletype == TileType::COAL &&
+					(nextTile(index, Direction::RIGHT) != -1 && 
+						this->tiles[nextTile(index, Direction::RIGHT)].tiletype == TileType::COAL &&
 						this->tiles[nextTile(index, Direction::RIGHT)].tileVersion == 1) ||
-						(this->tiles[nextTile(index, Direction::UP)].tiletype == TileType::COAL &&
+						(nextTile(index, Direction::UP) != -1 && 
+							this->tiles[nextTile(index, Direction::UP)].tiletype == TileType::COAL &&
 							this->tiles[nextTile(index, Direction::UP)].tileVersion == 1) ||
-							(this->tiles[nextTile(index, Direction::DOWN)].tiletype == TileType::COAL &&
+							(nextTile(index, Direction::DOWN) != -1 && 
+								this->tiles[nextTile(index, Direction::DOWN)].tiletype == TileType::COAL &&
 								this->tiles[nextTile(index, Direction::DOWN)].tileVersion == 1))
 				{
 					hasLight = true;
@@ -1077,6 +1084,150 @@ void Level::updateTrees()
 		}
 	}
 	//TODO if all are grown, activate exit
+}
+
+// A very slightly modified implementation of dijkstra's algorithm
+void Level::updateWater()
+{
+	// change all the normal waterways to type 0, && empty all bridges (maybe dont need to empty bridges, idk)
+	for (auto &tile : this->tiles)
+	{
+		if (tile.tiletype == TileType::WATERWAY)
+			tile.tileVersion = 0;
+		if (tile.tiletype == TileType::BRIDGE &&
+			(tile.tileVersion == 0 || tile.tileVersion == 2 || tile.tileVersion == 5 || tile.tileVersion == 7))
+			tile.tileVersion = 9;
+		if (tile.tiletype == TileType::BRIDGE &&
+			(tile.tileVersion == 1 || tile.tileVersion == 3 || tile.tileVersion == 4 || tile.tileVersion == 6))
+			tile.tileVersion = 8;
+	}
+	
+	// kill all sources that have rocks in them
+	for (auto entity : this->subEntities)
+	{
+		if (entity.entityType == EntityType::ROCK)
+		{
+			tiles[entity.pos] = this->tileBank.at(TileType::WATERWAY);
+			tiles[entity.pos].tileVersion = 4;
+		}
+	}
+
+	// have a 2 maps, one for settled elements & 1 for unsettled elements.
+	distanceSettled.clear();
+	distanceUnsettled.clear();
+
+	// add all the waterways/bridges tiles to the unsettled map, with an unrealistically high distance value (1000)
+	// add all watersources to the same unsettled map, with distance value = 0;
+	for (int index = 0; index < this->tiles.size(); ++index)
+	{
+		if ((tiles[index].tiletype == TileType::WATERWAY && tiles[index].tileVersion == 0) ||
+			tiles[index].tiletype == TileType::BRIDGE)
+		{
+			distanceUnsettled[index] = 1000;
+		}
+		if (tiles[index].tiletype == TileType::WATERSOURCE)
+		{
+			distanceUnsettled[index] = 1; // don't want 0, because then we mistake tiles not in the map for ones in the map
+		}
+	}
+	std::cout << distanceUnsettled.size();
+
+
+	// while there are still unsettled nodes:
+	while (!distanceUnsettled.empty())
+	{
+		// get the smallest in the map:
+		std::pair<int, int> min = *std::min_element(distanceUnsettled.begin(), distanceUnsettled.end(),
+		[](auto& l, auto& r) -> bool { return l.second < r.second; });
+		// if all that are left are 1000, we're done, those are unreachable.
+		if (min.second == 1000)
+			break;
+
+		// remove the element from unsettled
+		distanceUnsettled.erase(min.first);
+		// and add it to the settled array
+		distanceSettled[min.first] = min.second;
+
+		// for every unsettled tile that can be reached from the chosen tile, 
+		// calculate a new distance to those tiles from the current tile.
+
+		// if the adjacent tile is in the unsettled map
+		int next = nextTile(min.first, Direction::LEFT);
+		// I would have written a function for this part, but I felt there were too many functions already,
+		// so it just gets written out 4 times, meh.
+		if (distanceUnsettled.count(next))
+		{
+			if (distanceUnsettled[next] > min.second + 1)
+				distanceUnsettled[next] = min.second + 1;
+		}
+		next = nextTile(min.first, Direction::RIGHT);
+		if (distanceUnsettled.count(next))
+		{
+			if (distanceUnsettled[next] > min.second + 1)
+				distanceUnsettled[next] = min.second + 1;
+		}
+		next = nextTile(min.first, Direction::UP);
+		if (distanceUnsettled.count(next))
+		{
+			if (distanceUnsettled[next] > min.second + 1)
+				distanceUnsettled[next] = min.second + 1;
+		}
+		next = nextTile(min.first, Direction::DOWN);
+		if (distanceUnsettled.count(next))
+		{
+			if (distanceUnsettled[next] > min.second + 1)
+				distanceUnsettled[next] = min.second + 1;
+		}
+	}
+	
+	// then calculate tiletype based on distances
+	for (std::pair<int,int> position : distanceUnsettled)
+	{
+		if (tiles[position.first].tiletype == TileType::WATERWAY)
+			tiles[position.first].tileVersion = 4;
+		if (tiles[position.first].tiletype == TileType::BRIDGE)
+		{
+			// do nothing
+		}
+	}
+	// and I don't see how to do this part w/o a ton of if statements... ugh
+	for (std::pair<int, int> position : distanceSettled)
+	{
+		if (tiles[position.first].tiletype == TileType::WATERWAY)
+		{
+			if (distanceSettled[nextTile(position.first, Direction::LEFT)] == position.second - 1)
+				tiles[position.first].tileVersion = 2;
+			else if (distanceSettled[nextTile(position.first, Direction::RIGHT)] == position.second - 1)
+				tiles[position.first].tileVersion = 0;
+			else if (distanceSettled[nextTile(position.first, Direction::UP)] == position.second - 1)
+				tiles[position.first].tileVersion = 3;
+			else if (distanceSettled[nextTile(position.first, Direction::DOWN)] == position.second - 1)
+				tiles[position.first].tileVersion = 1;
+		}
+		if (tiles[position.first].tiletype == TileType::BRIDGE && tiles[position.first].tileVersion == 8)
+		{
+			if (distanceSettled[nextTile(position.first, Direction::LEFT)] == position.second - 1)
+				tiles[position.first].tileVersion = 6;
+			else if (distanceSettled[nextTile(position.first, Direction::RIGHT)] == position.second - 1)
+				tiles[position.first].tileVersion = 4;
+			else if (distanceSettled[nextTile(position.first, Direction::UP)] == position.second - 1)
+				tiles[position.first].tileVersion = 1;
+			else if (distanceSettled[nextTile(position.first, Direction::DOWN)] == position.second - 1)
+				tiles[position.first].tileVersion = 3;
+		}
+		if (tiles[position.first].tiletype == TileType::BRIDGE && tiles[position.first].tileVersion == 9)
+		{
+			if (distanceSettled[nextTile(position.first, Direction::LEFT)] == position.second - 1)
+				tiles[position.first].tileVersion = 2;
+			else if (distanceSettled[nextTile(position.first, Direction::RIGHT)] == position.second - 1)
+				tiles[position.first].tileVersion = 0;
+			else if (distanceSettled[nextTile(position.first, Direction::UP)] == position.second - 1)
+				tiles[position.first].tileVersion = 5;
+			else if (distanceSettled[nextTile(position.first, Direction::DOWN)] == position.second - 1)
+				tiles[position.first].tileVersion = 7;
+		}
+	}
+
 }
 
 Level::Level()

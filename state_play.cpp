@@ -19,8 +19,6 @@ void StatePlay::draw(Game* game, const float dt)
 
 void StatePlay::update(Game* game, const float dt)
 {
-	// TODO tree logic should be called from here.
-	this->level.updateTrees();
 	return;
 }
 
@@ -72,6 +70,7 @@ void StatePlay::init(Game* game)
 
 	level.selectTileByPos(sf::Vector2f(-1, -1));
 	level.settleEntities();
+	level.updateTrees();
 	level.reset();
 }
 
