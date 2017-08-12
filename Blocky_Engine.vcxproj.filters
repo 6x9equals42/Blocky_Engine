@@ -51,6 +51,9 @@
     <ClCompile Include="history.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="state_levels.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.hpp">
@@ -87,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="history.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="state_levels.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

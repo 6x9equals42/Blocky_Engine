@@ -4,6 +4,7 @@
 #include "state.hpp"
 #include "state_edit.hpp"
 #include "state_play.hpp"
+#include "state_levels.hpp"
 
 //#include <iostream>
 
@@ -144,7 +145,7 @@ void StateMenu::menuSelect(Game* game)
 	case 1:
 	{
 		// Play
-		game->pushState(new StatePlay());
+		game->pushState(new StateLevels());
 		break;
 	}
 	case 2:

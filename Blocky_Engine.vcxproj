@@ -153,6 +153,7 @@
     <ClCompile Include="player.cpp" />
     <ClCompile Include="sprites.cpp" />
     <ClCompile Include="state_edit.cpp" />
+    <ClCompile Include="state_levels.cpp" />
     <ClCompile Include="state_menu.cpp" />
     <ClCompile Include="state_play.cpp" />
     <ClCompile Include="textures.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="sprites.hpp" />
     <ClInclude Include="state.hpp" />
     <ClInclude Include="state_edit.hpp" />
+    <ClInclude Include="state_levels.hpp" />
     <ClInclude Include="state_menu.hpp" />
     <ClInclude Include="state_play.hpp" />
     <ClInclude Include="textures.hpp" />
