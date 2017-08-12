@@ -16,6 +16,11 @@ void Entity::draw(sf::RenderWindow& window, float dt)
 void Entity::update()
 {}
 
+bool Entity::operator==(const Entity & that)
+{
+	return (this->pos == that.pos && this->entityType == that.entityType && this->entityVersion == that.entityVersion);
+}
+
 Entity::Entity()
 {
 	this->entityVersion = -1;

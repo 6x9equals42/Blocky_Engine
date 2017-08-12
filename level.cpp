@@ -185,6 +185,9 @@ void Level::loadPlayer()
 	player = Player(textures.getTexture("playersheet"),
 	{ SpriteInfo(sf::Vector2i(0, 0)) });
 	playerPos = startTile;
+
+	exit = Player(textures.getTexture("spritesheet"),
+	{ SpriteInfo(sf::Vector2i(576, 0)) });
 }
 
 void Level::settleEntities()
@@ -254,6 +257,17 @@ void Level::save(const std::string& filename)
 	return;
 }
 
+void Level::reload()
+{
+	tiles.clear();
+	entities.clear();
+	subEntities.clear();
+
+	load(this->filename, this->width, this->height);
+	updateTrees();
+	stashLevelState();
+}
+
 void Level::reset()
 {
 	this->playerPos = this->startTile;
@@ -293,6 +307,16 @@ void Level::draw(sf::RenderWindow& window, float dt)
 
 		entity.draw(window, dt);
 	}
+	// draw the exit (so can be visible in editing too)
+	if (canExit)
+	{
+		sf::Vector2f pos;
+		pos.x = (exitTile % this->width) * 64;
+		pos.y = int(exitTile / this->width) * 64;
+		exit.sprite.setPosition(pos);
+		exit.draw(window, dt);
+	}
+
 	// go through each entity and draw at the right position.
 	for (auto entity : this->entities)
 	{
@@ -573,6 +597,8 @@ void Level::input(Direction direction)
 		}
 	}
 	updateTrees();
+
+	stashLevelState();
 }
 
 bool Level::onLand(int position)
@@ -1083,7 +1109,10 @@ void Level::updateTrees()
 			}
 		}
 	}
-	//TODO if all are grown, activate exit
+	if (allAreGrown)
+		canExit = true;
+	else
+		canExit = false;
 }
 
 // A very slightly modified implementation of dijkstra's algorithm
@@ -1228,6 +1257,77 @@ void Level::updateWater()
 
 }
 
+void Level::stashLevelState()
+{
+	LevelState levelState;
+	for (auto tile : this->tiles)
+	{
+		levelState.tileVersions.push_back(tile.tileVersion);
+	}
+
+	levelState.entities = this->entities;
+	levelState.subEntities = this->subEntities;
+
+	levelState.playerPos = this->playerPos;
+
+	// I don't know why using the == directly on the vectors kept throwing compilation errors.
+	// I tried every kind of overloading on the entity == and equal_to operators, but this works,
+	// so I'll do this (even if it's ugly)
+	bool same = true;
+	for (int index = 0; index < levelState.entities.size(); ++index)
+	{
+		if (!(levelState.entities[index] == levelHistory.getLevel().entities[index]))
+			same = false;
+	}
+	for (int index = 0; index < levelState.subEntities.size(); ++index)
+	{
+		if (!(levelState.subEntities[index] == levelHistory.getLevel().subEntities[index]))
+			same = false;
+	}
+	for (int index = 0; index < levelState.tileVersions.size(); ++index)
+	{
+		if (!(levelState.tileVersions[index] == levelHistory.getLevel().tileVersions[index]))
+			same = false;
+	}
+	if (levelState.playerPos != levelHistory.getLevel().playerPos)
+		same = false;
+	if (!same)
+		levelHistory.pushLevel(levelState);
+}
+
+void Level::undo()
+{
+	LevelState levelState = levelHistory.popLevel();
+	for (int index = 0; index < tiles.size(); ++index)
+	{
+		tiles[index].tileVersion = levelState.tileVersions[index];
+	}
+	this->entities = levelState.entities;
+	this->subEntities = levelState.subEntities;
+
+	this->playerPos = levelState.playerPos;
+
+
+	updateWater();
+	updateTrees();
+}
+
+void Level::clearHistory()
+{
+	/* intialize undo history */
+	LevelState levelState;
+	for (auto tile : this->tiles)
+	{
+		levelState.tileVersions.push_back(tile.tileVersion);
+	}
+	levelState.entities = this->entities;
+	levelState.subEntities = this->subEntities;
+	levelState.playerPos = this->playerPos;
+	levelHistory = History(levelState);
+	updateWater();
+	updateTrees();
+}
+
 Level::Level()
 {
 	selectedTile = -1;
@@ -1235,9 +1335,12 @@ Level::Level()
 
 Level::Level(const std::string& filename, unsigned int width, unsigned int height)
 {
-	
+	this->filename = filename;
 	selectedTile = -1;
 	startTile = 58;
 	exitTile = 63;
 	load(filename, width, height);
+
+	clearHistory();
+
 }

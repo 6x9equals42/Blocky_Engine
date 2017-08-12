@@ -20,6 +20,8 @@ public:
 
 	void update();
 
+	bool operator==(const Entity& that);
+
 	Entity();
 
 	Entity(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs, const EntityType entityType);

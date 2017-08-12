@@ -133,6 +133,8 @@ void StateEdit::init(Game* game)
 	this->worldView.setSize(pos);
 	pos *= 0.5f;
 	this->worldView.setCenter(pos);
+
+	level.reload();
 }
 
 StateEdit::StateEdit()

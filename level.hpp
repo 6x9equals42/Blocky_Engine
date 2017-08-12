@@ -9,6 +9,7 @@
 #include "textures.hpp"
 #include "entity.hpp"
 #include "player.hpp"
+#include "history.hpp"
 
 enum class Direction { UP, DOWN, LEFT, RIGHT, NONE };
 
@@ -21,11 +22,16 @@ private:
 	int exitTile;
 	bool canExit;
 
+	History levelHistory;
+
 	// maps for use of water updating
 	std::map<int, int> distanceUnsettled; // for dijkstra
 	std::map<int, int> distanceSettled; 
 	// and the recursive waterupdate function
 
+	// history functions
+	void stashLevelState();
+	
 
 	// internal input logic functions.
 	bool onLand(int position);
@@ -48,6 +54,7 @@ private:
 public:
 	unsigned int width;
 	unsigned int height;
+	std::string filename;
 
 	std::map<TileType, Tile> tileBank;
 	std::map<EntityType, Entity> entityBank;
@@ -60,6 +67,8 @@ public:
 	std::vector<Entity> subEntities;
 	// and the player;
 	Player player;
+	// and a workaround using the player class
+	Player exit;
 
 	// rendering
 	void draw(sf::RenderWindow& window, float dt);
@@ -72,7 +81,8 @@ public:
 	void loadEntities(const std::string& filename);
 	void loadPlayer();
 	void load(const std::string& filename, unsigned int width, unsigned int height);
-	void reset(); // this will need to change to actually reload the level instead of just resetting player poss
+	void reset(); 
+	void reload();
 
 	void save(const std::string& filename);
 	void settleEntities();
@@ -90,6 +100,9 @@ public:
 
 	// input logic functions. These could also maybe be an individual class.
 	void input(Direction direction);
+
+	void undo();
+	void clearHistory();
 	
 	void updateTrees();
 	void updateWater();

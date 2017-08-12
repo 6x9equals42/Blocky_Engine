@@ -54,6 +54,10 @@ void StatePlay::handleInput(Game* game)
 				level.input(Direction::LEFT);
 			if (event.key.code == sf::Keyboard::Right || event.key.code == sf::Keyboard::D)
 				level.input(Direction::RIGHT);
+			if (event.key.code == sf::Keyboard::Z)
+				level.undo();
+			if (event.key.code == sf::Keyboard::R)
+				level.reload();
 			break;
 		}
 		default: break;
@@ -72,6 +76,7 @@ void StatePlay::init(Game* game)
 	level.settleEntities();
 	level.updateTrees();
 	level.reset();
+	level.clearHistory();
 }
 
 StatePlay::StatePlay()
