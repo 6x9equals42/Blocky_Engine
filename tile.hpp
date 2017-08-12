@@ -4,7 +4,7 @@
 
 #include "sprites.hpp"
 
-enum class TileType { INACCESSIBLE, FLAT, WATERWAY, WATERSOURCE, VOID, BRIDGE, SAPLING, COAL };
+enum class TileType { INACCESSIBLE, FLAT, WATERWAY, VOID, BRIDGE, SAPLING, COAL };
 
 class Tile
 {

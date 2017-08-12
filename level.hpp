@@ -57,11 +57,9 @@ public:
 	std::vector<Tile> tiles;
 	// and also a vector of entities
 	std::vector<Entity> entities;
-	std::vector<Entity> subEntities;            // TODO remember to add this to loading at some point.
+	std::vector<Entity> subEntities;
 	// and the player;
 	Player player;
-
-	// void updateDirection(TileType tileType); (I don't know if I need this function)
 
 	// rendering
 	void draw(sf::RenderWindow& window, float dt);

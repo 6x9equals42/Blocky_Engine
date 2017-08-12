@@ -59,10 +59,10 @@ void StateEdit::handleInput(Game* game)
 			{
 				this->level.changeTile(TileType::WATERWAY);
 			}
-			if (event.key.code == sf::Keyboard::Num4)
+			/*if (event.key.code == sf::Keyboard::Num4)
 			{
 				this->level.changeTile(TileType::WATERSOURCE);
-			}
+			}*/
 			if (event.key.code == sf::Keyboard::Num5)
 			{
 				this->level.changeTile(TileType::VOID);
