@@ -148,34 +148,34 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="entity.cpp" />
-    <ClCompile Include="game.cpp" />
-    <ClCompile Include="history.cpp" />
-    <ClCompile Include="level.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="player.cpp" />
-    <ClCompile Include="sprites.cpp" />
-    <ClCompile Include="state_edit.cpp" />
-    <ClCompile Include="state_levels.cpp" />
-    <ClCompile Include="state_menu.cpp" />
-    <ClCompile Include="state_play.cpp" />
-    <ClCompile Include="textures.cpp" />
-    <ClCompile Include="tile.cpp" />
+    <ClCompile Include="src/entity.cpp" />
+    <ClCompile Include="src/game.cpp" />
+    <ClCompile Include="src/history.cpp" />
+    <ClCompile Include="src/level.cpp" />
+    <ClCompile Include="src/main.cpp" />
+    <ClCompile Include="src/player.cpp" />
+    <ClCompile Include="src/sprites.cpp" />
+    <ClCompile Include="src/state_edit.cpp" />
+    <ClCompile Include="src/state_levels.cpp" />
+    <ClCompile Include="src/state_menu.cpp" />
+    <ClCompile Include="src/state_play.cpp" />
+    <ClCompile Include="src/textures.cpp" />
+    <ClCompile Include="src/tile.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="entity.hpp" />
-    <ClInclude Include="game.hpp" />
-    <ClInclude Include="history.hpp" />
-    <ClInclude Include="level.hpp" />
-    <ClInclude Include="player.hpp" />
-    <ClInclude Include="sprites.hpp" />
-    <ClInclude Include="state.hpp" />
-    <ClInclude Include="state_edit.hpp" />
-    <ClInclude Include="state_levels.hpp" />
-    <ClInclude Include="state_menu.hpp" />
-    <ClInclude Include="state_play.hpp" />
-    <ClInclude Include="textures.hpp" />
-    <ClInclude Include="tile.hpp" />
+    <ClInclude Include="src/entity.hpp" />
+    <ClInclude Include="src/game.hpp" />
+    <ClInclude Include="src/history.hpp" />
+    <ClInclude Include="src/level.hpp" />
+    <ClInclude Include="src/player.hpp" />
+    <ClInclude Include="src/sprites.hpp" />
+    <ClInclude Include="src/state.hpp" />
+    <ClInclude Include="src/state_edit.hpp" />
+    <ClInclude Include="src/state_levels.hpp" />
+    <ClInclude Include="src/state_menu.hpp" />
+    <ClInclude Include="src/state_play.hpp" />
+    <ClInclude Include="src/textures.hpp" />
+    <ClInclude Include="src/tile.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
