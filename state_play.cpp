@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 
 void StatePlay::draw(Game* game, const float dt)
 {
@@ -26,15 +27,35 @@ void StatePlay::update(Game* game, const float dt)
 	// TODO here do if level.level finished, load the next level into level.
 	if (level.passedLevel())
 	{
-		struct stat buffer;
+		//std::cout << "level" << levelNum << "passed!\n";
+		// update the completed level list
+		std::vector<char> levelsPassed;
+
+		std::ifstream nf("game.dat");
+		std::copy(std::istream_iterator<char>(nf), std::istream_iterator<char>(), std::back_inserter(levelsPassed));
+
+		//std::cout << levelsPassed[0];
+		levelsPassed[levelNum - 1] = 1;
+		nf.close();
+		
+		std::ofstream of("game.dat");
+		std::copy(levelsPassed.begin(), levelsPassed.end(), std::ostream_iterator<char>(of));
+		// yay
+		of.close();
 		std::string filename = "level" + std::to_string(levelNum + 1) + ".level";
-		std::cout << filename;
-		if (stat(filename.c_str(), &buffer) == 0)
+		std::ifstream nextFile(filename.c_str());
+		if (nextFile.good())
 		{
 			level = Level("level" + std::to_string(++levelNum));
+
 		}
 		else
+		{
 			game->popState();
+			game->getState()->init(game);
+		}
+		nextFile.close();
+			
 			
 	}
 	return;

@@ -194,7 +194,6 @@ void Level::settleEntities()
 {
 	std::vector<Entity>::iterator it = entities.begin();
 	//std::cout << "settling entities \n";
-	//std::cout << "before, we have " << subEntities.size() << " subentities \n";
 
 	while (it != entities.end())
 	{

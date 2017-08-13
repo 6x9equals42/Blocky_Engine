@@ -70,7 +70,6 @@ void StateMenu::handleInput(Game* game)
 		{
 			if (event.mouseButton.button == sf::Mouse::Left)
 			{
-				//std::cout << position.x << "\n";
 				if (checkMouseMenu(position))
 				{
 					menu = checkMouseMenu(position);

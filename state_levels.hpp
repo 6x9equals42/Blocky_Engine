@@ -12,6 +12,8 @@ public:
 
 	sf::Sprite sprite;
 
+	int buttonVersion;
+
 	int level;
 
 	void draw(sf::RenderWindow& window, float dt);
@@ -19,7 +21,7 @@ public:
 	void update();
 
 	// This constructor is probably gonna grow pretty big. Depending on how I store tile info.
-	LevelButton(sf::Texture& texture, SpriteInfo sprinf, SpriteInfo sprinf2, int level);
+	LevelButton(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs, int level);
 	LevelButton();
 };
 
@@ -32,6 +34,7 @@ private:
 	sf::Text menuClear;
 	sf::Text numbers;
 	std::vector<LevelButton> levelButtons;
+	std::vector<char> levelsPassed;
 	sf::Texture buttonTex;
 	int level;
 	int menu;

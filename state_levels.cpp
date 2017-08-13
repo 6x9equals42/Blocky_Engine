@@ -4,12 +4,14 @@
 #include "state.hpp"
 #include "state_play.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <string>
-#include <sys/stat.h>
 
 void LevelButton::draw(sf::RenderWindow& window, float dt)
 {
+	this->sprthlpr.changeVersion(buttonVersion);
+
 	this->sprthlpr.update(dt);
 
 	this->sprite.setTextureRect(this->sprthlpr.getBounds());
@@ -21,15 +23,18 @@ void LevelButton::update()
 {
 }
 
-LevelButton::LevelButton(sf::Texture& texture, SpriteInfo sprinf, SpriteInfo sprinf2, int level)
+LevelButton::LevelButton(sf::Texture& texture, const std::vector<SpriteInfo>& sprinfs, int level)
 {
 	this->sprite.setTexture(texture);
 	this->sprthlpr.setFrameSize(sf::IntRect(0, 0, 64, 64));
 
-	this->sprthlpr.initVersion(sprinf);
-	this->sprthlpr.initVersion(sprinf2);
+	for (auto sprinf : sprinfs)
+	{
+		this->sprthlpr.initVersion(sprinf);
+	}
 
 	this->level = level;
+	this->buttonVersion = 0;
 }
 
 LevelButton::LevelButton()
@@ -55,10 +60,21 @@ void StateLevels::draw(Game* game, const float dt)
 			pos.y = y * 64 + 128;
 			this->levelButtons[y*12 + x].sprite.setPosition(pos);
 
-			if (y * 12 + x == level)
-				this->levelButtons[y * 12 + x].sprthlpr.changeVersion(1);
+			if (levelsPassed[y * 12 + x] == 1)
+			{
+				if (y * 12 + x == level)
+					this->levelButtons[y * 12 + x].buttonVersion = 1;
+				else
+					this->levelButtons[y * 12 + x].buttonVersion = 0;
+			}
 			else
-				this->levelButtons[y * 12 + x].sprthlpr.changeVersion(0);
+			{
+				if (y * 12 + x == level)
+					this->levelButtons[y * 12 + x].buttonVersion = 3;
+				else
+					this->levelButtons[y * 12 + x].buttonVersion = 2;
+			}
+			
 
 			// then draw it
 
@@ -197,19 +213,30 @@ void StateLevels::menuSelect(Game* game)
 	{
 		// back
 		game->popState();
+		break;
 	}
 	case 2:
 	{
 		// Clear
 		// TODO the save clearing logic
+		levelsPassed.clear();
+		levelsPassed.assign(60, 0);
+
+		// then save the data to file.
+		std::ofstream f("game.dat");
+		std::copy(this->levelsPassed.begin(), this->levelsPassed.end(), std::ostream_iterator<char>(f));
+
+
+		f.close();
+		break;
 	}
 	case 3:
 	{
 		// Select level
-		struct stat buffer;
+		
 		std::string filename = "level" + std::to_string(level + 1) + ".level";
-		std::cout << filename;
-		if (stat(filename.c_str(), &buffer) == 0)
+		std::ifstream f(filename.c_str());
+		if (f.good())
 			game->pushState(new StatePlay(level + 1));
 		break;
 	}
@@ -225,15 +252,24 @@ void StateLevels::init(Game* game)
 	pos *= 0.5f;
 	this->view.setCenter(pos);
 
-	// load the level statuses from a file
-	// 
-
-	// TODO this will later involve a fstream, but not now
+	levelButtons.clear();
+	levelsPassed.clear();
 	for (int index = 0; index < 60; ++index)
 	{
 		levelButtons.push_back(
-			LevelButton(buttonTex, SpriteInfo(sf::Vector2i(0, 0)), SpriteInfo(sf::Vector2i(64, 0)), index + 1)); // can probably remove the last argument in this constructor
+			LevelButton(buttonTex, 
+			{ SpriteInfo(sf::Vector2i(0, 0)),
+				SpriteInfo(sf::Vector2i(64, 0)),
+				SpriteInfo(sf::Vector2i(0, 64)),
+				SpriteInfo(sf::Vector2i(64, 64)) },
+				index + 1)); // can probably remove the last argument in this constructor
 	}
+
+	// load the level statuses
+	std::ifstream f("game.dat");
+	std::copy(std::istream_iterator<char>(f), std::istream_iterator<char>(), std::back_inserter(levelsPassed));
+
+	f.close();
 }
 
 StateLevels::StateLevels()
