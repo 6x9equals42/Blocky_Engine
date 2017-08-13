@@ -1301,16 +1301,28 @@ void Level::stashLevelState()
 	// I tried every kind of overloading on the entity == and equal_to operators, but this works,
 	// so I'll do this (even if it's ugly)
 	bool same = true;
-	for (int index = 0; index < levelState.entities.size(); ++index)
+	// first check if the sizes are different.
+	if (levelState.entities.size() != levelHistory.getLevel().entities.size())
+		same = false;
+	else
 	{
-		if (!(levelState.entities[index] == levelHistory.getLevel().entities[index]))
-			same = false;
+		for (int index = 0; index < levelState.entities.size(); ++index)
+		{
+			if (!(levelState.entities[index] == levelHistory.getLevel().entities[index]))
+				same = false;
+		}
 	}
-	for (int index = 0; index < levelState.subEntities.size(); ++index)
+	if (levelState.subEntities.size() != levelHistory.getLevel().subEntities.size())
+		same = false;
+	else
 	{
-		if (!(levelState.subEntities[index] == levelHistory.getLevel().subEntities[index]))
-			same = false;
+		for (int index = 0; index < levelState.subEntities.size(); ++index)
+		{
+			if (!(levelState.subEntities[index] == levelHistory.getLevel().subEntities[index]))
+				same = false;
+		}
 	}
+
 	for (int index = 0; index < levelState.tileVersions.size(); ++index)
 	{
 		if (!(levelState.tileVersions[index] == levelHistory.getLevel().tileVersions[index]))

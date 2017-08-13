@@ -33,7 +33,7 @@ void StateMenu::handleInput(Game* game)
 {
 	sf::Event event;
 
-	sf::Vector2f position = game->window.mapPixelToCoords(sf::Mouse::getPosition(game->window), this->view);
+	//sf::Vector2f position = game->window.mapPixelToCoords(sf::Mouse::getPosition(game->window), this->view);
 
 	while (game->window.pollEvent(event))
 	{
@@ -57,7 +57,7 @@ void StateMenu::handleInput(Game* game)
 				menuSelect(game);
 			break;
 		}
-		case sf::Event::MouseMoved:
+		/*case sf::Event::MouseMoved:
 		{
 			if (checkMouseMenu(position))
 			{
@@ -77,13 +77,13 @@ void StateMenu::handleInput(Game* game)
 				}
 			}
 			break;
-		}
+		}*/
 		default: break;
 		}
 	}
 }
 
-int StateMenu::checkMouseMenu(sf::Vector2f pos)
+/*int StateMenu::checkMouseMenu(sf::Vector2f pos)
 {
 	if (menuPlay.getGlobalBounds().contains(pos))
 		return 1;
@@ -93,7 +93,7 @@ int StateMenu::checkMouseMenu(sf::Vector2f pos)
 		return 3;
 	else
 		return 0;
-}
+}*/
 
 void StateMenu::menuUp()
 {

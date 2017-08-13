@@ -15,7 +15,7 @@ private:
 	void menuDown();
 	void updateMenu();
 	void menuSelect(Game* game);
-	int checkMouseMenu(sf::Vector2f pos);
+	//int checkMouseMenu(sf::Vector2f pos);
 	
 public:
 	virtual void draw(Game* game, const float dt);
