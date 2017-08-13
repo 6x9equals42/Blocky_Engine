@@ -31,14 +31,14 @@ void StatePlay::update(Game* game, const float dt)
 		// update the completed level list
 		std::vector<char> levelsPassed;
 
-		std::ifstream nf("game.dat");
+		std::ifstream nf("levels/game.dat");
 		std::copy(std::istream_iterator<char>(nf), std::istream_iterator<char>(), std::back_inserter(levelsPassed));
 
 		//std::cout << levelsPassed[0];
 		levelsPassed[levelNum - 1] = 1;
 		nf.close();
 		
-		std::ofstream of("game.dat");
+		std::ofstream of("levels/game.dat");
 		std::copy(levelsPassed.begin(), levelsPassed.end(), std::ostream_iterator<char>(of));
 		// yay
 		of.close();

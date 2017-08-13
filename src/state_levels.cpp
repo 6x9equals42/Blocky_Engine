@@ -223,7 +223,7 @@ void StateLevels::menuSelect(Game* game)
 		levelsPassed.assign(60, 0);
 
 		// then save the data to file.
-		std::ofstream f("game.dat");
+		std::ofstream f("levels/game.dat");
 		std::copy(this->levelsPassed.begin(), this->levelsPassed.end(), std::ostream_iterator<char>(f));
 
 
@@ -266,7 +266,7 @@ void StateLevels::init(Game* game)
 	}
 
 	// load the level statuses
-	std::ifstream f("game.dat");
+	std::ifstream f("levels/game.dat");
 	std::copy(std::istream_iterator<char>(f), std::istream_iterator<char>(), std::back_inserter(levelsPassed));
 
 	f.close();
