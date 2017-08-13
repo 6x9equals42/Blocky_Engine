@@ -397,6 +397,8 @@ void Level::deleteEntity()
 
 void Level::cycleEntityVersion()
 {
+	if (entities.empty())
+		return;
 	int numVersions = this->entities.back().sprthlpr.getNumVersions();
 	this->entities.back().entityVersion = (this->entities.back().entityVersion + 1) % numVersions;
 
@@ -1091,7 +1093,7 @@ void Level::updateTrees()
 				{
 					for (auto entity : this->entities)
 					{
-						if (entity.entityType == EntityType::TORCH)
+						if (entity.entityType == EntityType::TORCH && entity.entityVersion == 0)
 						{
 							if (entity.pos == nextTile(index, Direction::LEFT) ||
 								entity.pos == nextTile(index, Direction::RIGHT) ||
