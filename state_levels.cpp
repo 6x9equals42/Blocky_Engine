@@ -234,7 +234,7 @@ void StateLevels::menuSelect(Game* game)
 	{
 		// Select level
 		
-		std::string filename = "level" + std::to_string(level + 1) + ".level";
+		std::string filename = "levels/level" + std::to_string(level + 1) + ".level";
 		std::ifstream f(filename.c_str());
 		if (f.good())
 			game->pushState(new StatePlay(level + 1));
@@ -274,7 +274,7 @@ void StateLevels::init(Game* game)
 
 StateLevels::StateLevels()
 {
-	font.loadFromFile("verdanab.ttf");
+	font.loadFromFile("resources/verdanab.ttf");
 
 
 	// track what menu item is highlighted
@@ -297,7 +297,7 @@ StateLevels::StateLevels()
 
 
 	// and create the texture
-	buttonTex.loadFromFile("media/levelbuttons.png");
+	buttonTex.loadFromFile("resources/levelbuttons.png");
 
 	updateMenu();
 

@@ -174,7 +174,7 @@ void StateMenu::init(Game* game)
 
 StateMenu::StateMenu()
 {
-	font.loadFromFile("verdanab.ttf");
+	font.loadFromFile("resources/verdanab.ttf");
 
 
 	// track what menu item is highlighted

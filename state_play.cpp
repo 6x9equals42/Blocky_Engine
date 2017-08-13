@@ -42,11 +42,11 @@ void StatePlay::update(Game* game, const float dt)
 		std::copy(levelsPassed.begin(), levelsPassed.end(), std::ostream_iterator<char>(of));
 		// yay
 		of.close();
-		std::string filename = "level" + std::to_string(levelNum + 1) + ".level";
+		std::string filename = "levels/level" + std::to_string(levelNum + 1) + ".level";
 		std::ifstream nextFile(filename.c_str());
 		if (nextFile.good())
 		{
-			level = Level("level" + std::to_string(++levelNum));
+			level = Level("levels/level" + std::to_string(++levelNum));
 
 		}
 		else
@@ -80,7 +80,11 @@ void StatePlay::handleInput(Game* game)
 		case sf::Event::KeyPressed:
 		{
 			if (event.key.code == sf::Keyboard::Escape)
+			{
 				game->popState();
+				game->getState()->init(game);
+			}
+				
 			if (event.key.code == sf::Keyboard::Return)
 			{
 				game->changeState(new StateEdit(level));
@@ -120,17 +124,18 @@ void StatePlay::init(Game* game)
 
 StatePlay::StatePlay()
 {
-	level = Level("level1");
+	level = Level("levels/level1");
 }
 
 StatePlay::StatePlay(Level level)
 {
 	this->level = level;
+	this->levelNum = 1;
 }
 
 StatePlay::StatePlay(int levelNum)
 {
-	level = Level("level" + std::to_string(levelNum));
+	level = Level("levels/level" + std::to_string(levelNum));
 	this->levelNum = levelNum;
 }
 

@@ -78,8 +78,8 @@ void Level::load(const std::string& filename)
 void Level::loadTextures(const std::string& filename)
 {
 	// TODO make this also load from file eventually (which textures to load)
-	textures.loadTexture("spritesheet", "media/spritesheet.png");
-	textures.loadTexture("playersheet", "media/playersheet.png");
+	textures.loadTexture("spritesheet", "resources/spritesheet.png");
+	textures.loadTexture("playersheet", "resources/playersheet.png");
 }
 
 void Level::loadTiles(const std::string& filename)
@@ -1361,16 +1361,15 @@ Level::Level()
 	levelCompleted = false;
 	time = 0;
 
-	this->filename = "level1";
+	this->filename = "levels/level1";
 }
 
 Level::Level(const std::string& filename)
 {
 	this->filename = filename;
 	selectedTile = -1;
-	startTile = 58;
-	exitTile = 63;
 	load(filename);
+	playerPos = startTile;
 
 	clearHistory();
 	levelCompleted = false;

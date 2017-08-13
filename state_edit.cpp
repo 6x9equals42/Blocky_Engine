@@ -150,7 +150,7 @@ StateEdit::StateEdit()
 	//level = Level();
 	//level.createBlankLevel(); // for creating new levels..
 	
-	level = Level("level1");
+	level = Level("levels/level1");
 }
 
 StateEdit::StateEdit(Level level)
