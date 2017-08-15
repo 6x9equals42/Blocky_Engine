@@ -830,7 +830,8 @@ void Level::activateEntities(int position, Direction direction)
 				// fill the one bucket
 				currentEnt->entityVersion = 1;
 				// don't need to activate cause its the end
-				return;
+				// change this to false so it doesn't try to activate again.
+				safeToCheck = false;
 			}
 		}
 		// emptying a bucket
@@ -844,7 +845,7 @@ void Level::activateEntities(int position, Direction direction)
 				// pour to next bucket
 				currentEnt->entityVersion = 0;
 				nextEnt->entityVersion = 1;
-				return;
+				safeToCheck = false;
 			}
 			// putting out a torch
 			else if (safeToCheck && (nextEnt->entityType == EntityType::TORCH && nextEnt->entityVersion == 0))
@@ -854,7 +855,7 @@ void Level::activateEntities(int position, Direction direction)
 				currentEnt->entityVersion = 0;
 				// then activate
 				activateEntities(newPosition, direction);
-				return;
+				safeToCheck = false;
 			}
 			// putting out a fire
 			else if (targetTile->tiletype == TileType::COAL && targetTile->tileVersion == 1)
@@ -863,7 +864,7 @@ void Level::activateEntities(int position, Direction direction)
 				targetTile->tileVersion = 0;
 				currentEnt->entityVersion = 0;
 				// don't need to acctivate 'cause it's the end.
-				return;
+				safeToCheck = false;
 			}
 			// watering a sapling
 			else if (targetTile->tiletype == TileType::SAPLING && 
@@ -874,7 +875,7 @@ void Level::activateEntities(int position, Direction direction)
 
 				currentEnt->entityVersion = 0;
 				// don't need to acctivate 'cause it's the end.
-				return;
+				safeToCheck = false;
 			}
 		}
 	}
@@ -888,14 +889,14 @@ void Level::activateEntities(int position, Direction direction)
 				// activate the next first before making sure the next is on
 				activateEntities(newPosition, direction);
 				nextEnt->entityVersion = 0;
-				return;
+				safeToCheck = false;
 			}
 			// using it on a sapling
 			else if (targetTile->tiletype == TileType::SAPLING) 
 			{
 				targetTile->tileVersion = 5;
 				// if already a tree, make it burn!!!
-				return;
+				safeToCheck = false;
 			}
 			// dousing it
 			else if ((targetTile->tiletype == TileType::WATERWAY) && 
@@ -912,12 +913,12 @@ void Level::activateEntities(int position, Direction direction)
 				// order doesn't matter here, so keep it the same as copy/paste
 				activateEntities(newPosition, direction);
 				currentEnt->entityVersion = 0;
-				return;
+				safeToCheck = false;
 			}
 			else if (targetTile->tiletype == TileType::COAL && targetTile->tileVersion == 1)
 			{
 				currentEnt->entityVersion = 0;
-				return;
+				safeToCheck = false;
 			}
 
 		}
@@ -926,6 +927,17 @@ void Level::activateEntities(int position, Direction direction)
 	{
 		activateEntities(newPosition, direction);
 	}
+
+	// destroy torch and light coals if that changed
+	if (currentEnt->entityType == EntityType::TORCH && currentEnt->entityVersion == 0 && tiles[position].tiletype == TileType::COAL)
+	{
+		tiles[position].tileVersion = 1;
+
+		entities.erase(std::remove_if(entities.begin(), entities.end(),
+			[&](const Entity entity)->bool { return entity.pos == position; }),
+			entities.end());
+	}
+
 }
 
 bool Level::isRowable(int position, Direction direction)
